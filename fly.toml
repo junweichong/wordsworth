@@ -1,7 +1,7 @@
 # fly.toml — Wordsworth game server
 # Generated for Fly.io deployment
 
-app = "wordsworth-game"   # ← change this to your chosen app name
+app = "wordsworth"   # ← change this to your chosen app name
 primary_region = "sin"    # Singapore — closest free region to Southeast Asia
 
 [build]
