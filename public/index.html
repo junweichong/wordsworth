@@ -467,7 +467,8 @@
       border: 1.5px solid rgba(200, 169, 110, 0.4);
       border-radius: 4px;
       padding: 1rem 1.25rem;
-      display: none;
+      display: block;
+      min-height: 145px;
     }
 
     .call-panel.visible {
@@ -484,6 +485,13 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
       gap: 0.4rem;
+      min-height: 90px;
+      transition: opacity 0.15s ease;
+    }
+
+    .alphabet-grid.inactive {
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .letter-btn {
@@ -1155,7 +1163,7 @@
 
     <!-- Call panel (only visible on your turn) -->
     <div class="call-panel" id="call-panel">
-      <p>It's your turn — choose a letter to call for all players:</p>
+      <p id="call-status">Waiting for the current player to choose a letter.</p>
       <div class="alphabet-grid" id="alphabet-grid"></div>
     </div>
 
@@ -1401,6 +1409,8 @@
       state.placedThisTurn = true;
       updateBoard();
       toast(`Placed ${letter} in cell ${state.selectedCell + 1}`);
+      document.getElementById('call-status').textContent =
+        `Letter ${letter} placed. Waiting for the other players...`;
       socket.emit('letter_placed', { grid: state.grid });
     }
 
@@ -1425,6 +1435,8 @@
       const idx = document.getElementById('turn-index');
       const tot = document.getElementById('turn-total');
       const callPanel = document.getElementById('call-panel');
+      const callStatus = document.getElementById('call-status');
+      const alphabetGrid = document.getElementById('alphabet-grid');
 
       idx.textContent = turnIndex + 1;
       tot.textContent = totalTurns;
@@ -1434,18 +1446,23 @@
       if (isMyTurn) {
         badge.className = 'turn-badge your-turn';
         nameEl.textContent = 'Your turn!';
+        callStatus.textContent = 'You are choosing a letter for all players.';
         callPanel.classList.add('visible');
+        alphabetGrid.classList.remove('inactive');
         buildAlphabet();
         toast('Your turn — call a letter!', 3000);
       } else {
         badge.className = 'turn-badge';
         nameEl.textContent = playerName + '\'s turn';
-        callPanel.classList.remove('visible');
+        callStatus.textContent = `${playerName} is choosing a letter.`;
+        callPanel.classList.add('visible');
+        alphabetGrid.classList.add('inactive');
       }
     }
 
     function buildAlphabet() {
       const grid = document.getElementById('alphabet-grid');
+      grid.classList.remove('inactive');
       grid.innerHTML = '';
       'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
         const btn = document.createElement('button');
@@ -1796,6 +1813,9 @@
       state.currentLetterCaller = calledBy;
       state.placedThisTurn = false;
       renderCalledLetters(letter, calledBy);
+      document.getElementById('call-status').textContent =
+        `${calledBy} chose ${letter}. Place it on your board.`;
+      document.getElementById('alphabet-grid').classList.add('inactive');
       if (calledBy !== state.playerName) {
         toast(`${calledBy} called "${letter}"`);
       }
