@@ -399,6 +399,40 @@
       font-style: italic;
     }
 
+    .current-letter {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: var(--forest);
+      color: var(--paper);
+      border-radius: 4px;
+      padding: 0.35rem 0.65rem;
+      min-width: 150px;
+    }
+
+    .current-letter-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .current-letter-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .current-letter-caller {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.66rem;
+      opacity: 0.8;
+    }
+
     .turn-badge {
       background: var(--cream);
       border: 1.5px solid rgba(200, 169, 110, 0.5);
@@ -1104,6 +1138,11 @@
   <div id="screen-game" class="screen">
     <div class="game-header">
       <span class="game-title">Wordsworth</span>
+      <div class="current-letter" id="current-letter" aria-live="polite">
+        <span class="current-letter-label">Letter</span>
+        <strong class="current-letter-value" id="current-letter-value">—</strong>
+        <span class="current-letter-caller" id="current-letter-caller">Waiting</span>
+      </div>
       <div id="timer-display" style="font-size:1.5rem; font-weight:bold; color:var(--red); display:none;">30s</div>
       <div class="turn-badge" id="turn-badge">
         <span>Current turn</span>
@@ -1368,8 +1407,9 @@
     // ═══════════════════════════════════════════════════════
     // Called letters log
     // ═══════════════════════════════════════════════════════
-    function renderCalledLetters() {
-      // intentionally empty as requested
+    function renderCalledLetters(letter = state.currentLetter, calledBy = state.currentLetterCaller) {
+      document.getElementById('current-letter-value').textContent = letter || '—';
+      document.getElementById('current-letter-caller').textContent = calledBy ? `by ${calledBy}` : 'Waiting';
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1738,6 +1778,8 @@
     socket.on('game_started', ({ turnOrder, currentTurn, totalTurns, turnTimer }) => {
       state.phase = 'playing';
       state.calledLetters = [];
+      state.currentLetter = null;
+      state.currentLetterCaller = null;
       state.grid = Array(25).fill('');
       state.totalTurns = totalTurns;
 
@@ -1751,8 +1793,9 @@
     socket.on('letter_called', ({ letter, calledBy, calledLetters, turnsLeft, turnTimer }) => {
       state.calledLetters = calledLetters;
       state.currentLetter = letter;
+      state.currentLetterCaller = calledBy;
       state.placedThisTurn = false;
-      renderCalledLetters();
+      renderCalledLetters(letter, calledBy);
       if (calledBy !== state.playerName) {
         toast(`${calledBy} called "${letter}"`);
       }
@@ -1765,6 +1808,8 @@
 
     socket.on('next_turn', ({ playerId, playerName, turnIndex, totalTurns, turnTimer }) => {
       state.currentLetter = null;
+      state.currentLetterCaller = null;
+      renderCalledLetters();
       updateTurnUI(playerId, playerName, turnIndex, totalTurns);
       startVisualTimer(turnTimer);
     });
