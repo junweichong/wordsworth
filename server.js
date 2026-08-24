@@ -115,8 +115,6 @@ function scoreBoard(grid) {
 
   function checkLine(cells) {
     const line = cells.map(c => (c || '').toLowerCase());
-    const lineStr = line.join('');
-    // find all valid substrings length 3+, only where all cells are filled
     for (let start = 0; start < size; start++) {
       for (let end = start + 3; end <= size; end++) {
         const slice = line.slice(start, end);
@@ -141,8 +139,6 @@ function scoreBoard(grid) {
     checkLine(col);
   }
 
-  // Remove words entirely contained in longer words (same line handled below)
-  // Deduplicate by word string (a word scores once per unique occurrence per line)
   const total = words.reduce((sum, w) => sum + w.score, 0);
   return { words, total };
 }
@@ -162,7 +158,6 @@ io.on('connection', (socket) => {
       players: [{
         id: socket.id,
         name: playerName,
-        ready: false,
         board: null,
         score: null,
         words: null
@@ -179,7 +174,7 @@ io.on('connection', (socket) => {
     socket.data.playerName = playerName;
 
     socket.emit('room_created', { roomId, playerId: socket.id });
-    socket.emit('room_state', sanitiseRoom(rooms[roomId], socket.id));
+    socket.emit('room_state', sanitiseRoom(rooms[roomId]));
     console.log(`Room ${roomId} created by ${playerName}`);
   });
 
@@ -196,7 +191,6 @@ io.on('connection', (socket) => {
     room.players.push({
       id: socket.id,
       name: playerName,
-      ready: false,
       board: null,
       score: null,
       words: null
@@ -207,7 +201,7 @@ io.on('connection', (socket) => {
     socket.data.playerName = playerName;
 
     socket.emit('room_joined', { roomId, playerId: socket.id });
-    io.to(roomId).emit('room_state', sanitiseRoom(room, null));
+    io.to(roomId).emit('room_state', sanitiseRoom(room));
     console.log(`${playerName} joined room ${roomId}`);
   });
 
@@ -500,7 +494,7 @@ function startPlaceTimer(roomId, room, letter) {
   }
 }
 
-function sanitiseRoom(room, viewerId) {
+function sanitiseRoom(room) {
   return {
     id: room.id,
     hostId: room.hostId,
