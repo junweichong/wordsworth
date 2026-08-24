@@ -100,6 +100,33 @@
       width: 100%;
       max-width: 480px;
       text-align: center;
+      position: relative;
+    }
+
+    .info-button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 2rem;
+      height: 2rem;
+      border: 1.5px solid rgba(26, 18, 8, 0.35);
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink);
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-style: italic;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .info-button:hover,
+    .info-button:focus-visible {
+      background: var(--ink);
+      color: var(--paper);
+      outline: none;
     }
 
     .wordmark {
@@ -1071,6 +1098,8 @@
   <div id="screen-landing" class="screen active">
     <div class="landing-inner">
       <h1 class="wordmark">Words<em>worth</em></h1>
+      <button class="info-button" type="button" onclick="openHowToPlay()" aria-label="How to play"
+        title="How to play">i</button>
       <p class="tagline">A word-grid game for sharp minds</p>
 
       <div class="card">
@@ -1229,6 +1258,24 @@
       <p class="definition-kicker">Dictionary</p>
       <h3 id="definition-word">Word</h3>
       <div id="definition-content" class="definition-content"></div>
+    </div>
+  </div>
+
+  <div id="how-to-play-modal" class="definition-modal" aria-hidden="true">
+    <div class="definition-dialog" role="dialog" aria-modal="true" aria-labelledby="how-to-play-title">
+      <button class="definition-close" type="button" onclick="closeHowToPlay()" aria-label="Close how to play">✕</button>
+      <p class="definition-kicker">How to play</p>
+      <h3 id="how-to-play-title">Build words together</h3>
+      <div class="definition-content">
+        <ol class="how-to-play-list">
+          <li>Join a room with at least one other player.</li>
+          <li>Players take turns choosing a letter for everyone.</li>
+          <li>Place each letter on your 5x5 board.</li>
+          <li>When all 25 letters are placed, submit your board.</li>
+          <li>Make words across or down to score points.</li>
+        </ol>
+        <p><strong>Scoring:</strong> 3-letter words score 3 points, 4-letter words score 4 points, and 5-letter words score 10 points.</p>
+      </div>
     </div>
   </div>
 
@@ -1592,6 +1639,18 @@
       modal.setAttribute('aria-hidden', 'true');
     }
 
+    function openHowToPlay() {
+      const modal = document.getElementById('how-to-play-modal');
+      modal.classList.add('visible');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeHowToPlay() {
+      const modal = document.getElementById('how-to-play-modal');
+      modal.classList.remove('visible');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
     async function openWordDefinition(word) {
       const modal = document.getElementById('definition-modal');
       const content = document.getElementById('definition-content');
@@ -1703,6 +1762,9 @@
 
       document.getElementById('definition-modal').addEventListener('click', (event) => {
         if (event.target.id === 'definition-modal') closeDefinitionModal();
+      });
+      document.getElementById('how-to-play-modal').addEventListener('click', (event) => {
+        if (event.target.id === 'how-to-play-modal') closeHowToPlay();
       });
 
       // ensure legacy 'my words' is hidden since it's redundant now
@@ -1889,6 +1951,12 @@
     document.getElementById('create-name').addEventListener('keydown', e => { if (e.key === 'Enter') createRoom(); });
     document.getElementById('join-code').addEventListener('keydown', e => { if (e.key === 'Enter') joinRoom(); });
     document.getElementById('join-name').addEventListener('keydown', e => { if (e.key === 'Enter') joinRoom(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeHowToPlay();
+        closeDefinitionModal();
+      }
+    });
 
     // Auto-uppercase room code input
     document.getElementById('join-code').addEventListener('input', e => {
