@@ -1,0 +1,24 @@
+# fly.toml — Wordsworth game server
+# Generated for Fly.io deployment
+
+app = "wordsworth-game"   # ← change this to your chosen app name
+primary_region = "sin"    # Singapore — closest free region to Southeast Asia
+
+[build]
+  # Fly auto-detects Node.js via package.json
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false   # keep always-on (important for WebSockets)
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 500
+    soft_limit = 200
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

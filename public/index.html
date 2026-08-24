@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wordsworth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    /* ── Reset & Tokens ─────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --ink: #1a1208;
+      --paper: #f5f0e8;
+      --cream: #ede6d6;
+      --sepia: #c8a96e;
+      --rust: #b85c2a;
+      --forest: #2d5a3d;
+      --slate: #5a6a72;
+      --gold: #d4a843;
+      --red: #c0392b;
+      --shadow: rgba(26, 18, 8, 0.15);
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: 'DM Mono', monospace;
+      background: var(--paper);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.5;
+    }
+
+    /* ── Typography ─────────────────────────────────────────── */
+    h1,
+    h2,
+    h3 {
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* ── Screens ─────────────────────────────────────────────── */
+    .screen {
+      display: none;
+      min-height: 100vh;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── Landing Screen ──────────────────────────────────────── */
+    #screen-landing {
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background:
+        radial-gradient(ellipse at 20% 80%, rgba(200, 169, 110, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(45, 90, 61, 0.10) 0%, transparent 55%),
+        var(--paper);
+    }
+
+    .landing-inner {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    .wordmark {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--ink);
+      position: relative;
+      display: inline-block;
+      margin-bottom: 0.25rem;
+    }
+
+    .wordmark em {
+      font-style: italic;
+      color: var(--rust);
+    }
+
+    .tagline {
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 3rem;
+    }
+
+    .card {
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.4);
+      border-radius: 4px;
+      padding: 2rem;
+      box-shadow: 0 4px 24px var(--shadow);
+      margin-bottom: 1rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1.25rem;
+      color: var(--ink);
+      font-style: italic;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    input[type="text"] {
+      background: var(--paper);
+      border: 1.5px solid rgba(200, 169, 110, 0.5);
+      border-radius: 3px;
+      padding: 0.75rem 1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--slate);
+      opacity: 0.7;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--sepia);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 3px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .btn-primary:hover {
+      background: var(--rust);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid rgba(26, 18, 8, 0.3);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--ink);
+      background: rgba(26, 18, 8, 0.04);
+    }
+
+    .btn-danger {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #a93226;
+    }
+
+    .btn-forest {
+      background: var(--forest);
+      color: var(--paper);
+    }
+
+    .btn-forest:hover {
+      background: #1e3d2a;
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.25rem 0;
+      color: var(--slate);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(200, 169, 110, 0.4);
+    }
+
+    .error-msg {
+      background: rgba(192, 57, 43, 0.08);
+      border: 1px solid rgba(192, 57, 43, 0.3);
+      border-radius: 3px;
+      color: var(--red);
+      font-size: 0.82rem;
+      padding: 0.6rem 0.9rem;
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    /* ── Lobby Screen ────────────────────────────────────────── */
+    #screen-lobby {
+      padding: 1.5rem;
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+      gap: 1rem;
+    }
+
+    .lobby-header {
+      text-align: center;
+      padding: 1.5rem 0 0.5rem;
+    }
+
+    .lobby-header h1 {
+      font-size: 2rem;
+    }
+
+    .room-code {
+      display: inline-block;
+      background: var(--ink);
+      color: var(--gold);
+      font-family: 'DM Mono', monospace;
+      font-size: 2rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      padding: 0.5rem 1.5rem;
+      border-radius: 4px;
+      margin: 0.75rem 0;
+    }
+
+    .room-hint {
+      font-size: 0.78rem;
+      color: var(--slate);
+      letter-spacing: 0.08em;
+    }
+
+    .player-list-wrap {
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.4);
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+    }
+
+    .player-list-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 0.75rem;
+    }
+
+    .player-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .player-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px dashed rgba(200, 169, 110, 0.25);
+    }
+
+    .player-list li:last-child {
+      border-bottom: none;
+    }
+
+    .player-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--sepia);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+
+    .host-badge {
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      background: var(--gold);
+      color: var(--ink);
+      padding: 0.15rem 0.4rem;
+      border-radius: 2px;
+      margin-left: auto;
+    }
+
+    .you-badge {
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      background: var(--forest);
+      color: var(--paper);
+      padding: 0.15rem 0.4rem;
+      border-radius: 2px;
+      margin-left: auto;
+    }
+
+    /* ── Game Screen ─────────────────────────────────────────── */
+    #screen-game {
+      padding: 1rem;
+      gap: 0.75rem;
+      max-width: 700px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .game-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-style: italic;
+    }
+
+    .turn-badge {
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.5);
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 0.78rem;
+      color: var(--slate);
+      text-align: center;
+      flex: 1;
+    }
+
+    .turn-badge strong {
+      display: block;
+      font-size: 0.95rem;
+      color: var(--ink);
+      font-family: 'Playfair Display', serif;
+    }
+
+    .turn-badge.your-turn {
+      background: var(--forest);
+      border-color: var(--forest);
+      color: rgba(245, 240, 232, 0.8);
+    }
+
+    .turn-badge.your-turn strong {
+      color: var(--paper);
+    }
+
+    /* Letter calling panel */
+    .call-panel {
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.4);
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+      display: none;
+    }
+
+    .call-panel.visible {
+      display: block;
+    }
+
+    .call-panel p {
+      font-size: 0.82rem;
+      color: var(--slate);
+      margin-bottom: 0.75rem;
+    }
+
+    .alphabet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+      gap: 0.4rem;
+    }
+
+    .letter-btn {
+      aspect-ratio: 1;
+      background: var(--paper);
+      border: 1.5px solid rgba(200, 169, 110, 0.5);
+      border-radius: 3px;
+      font-family: 'DM Mono', monospace;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.12s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .letter-btn:hover {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    /* Called letters log */
+    .called-log {
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.4);
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+    }
+
+    .called-log-title {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 0.5rem;
+    }
+
+    .called-letters-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .called-chip {
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 3px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    .called-chip span {
+      font-size: 0.58rem;
+      opacity: 0.6;
+      font-weight: 300;
+      line-height: 1;
+    }
+
+    /* The 6×6 board */
+    .board-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .board-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--slate);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.5);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(2rem, 6vw, 2.75rem);
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.12s ease;
+      position: relative;
+      user-select: none;
+    }
+
+    .cell:hover {
+      border-color: var(--sepia);
+      background: var(--paper);
+    }
+
+    .cell.selected {
+      border-color: var(--rust);
+      background: rgba(184, 92, 42, 0.08);
+      box-shadow: inset 0 0 0 1px var(--rust);
+    }
+
+    .cell.filled {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    .cell.filled:hover {
+      background: rgba(26, 18, 8, 0.75);
+      border-color: var(--ink);
+    }
+
+    /* Floating letter picker (shows when cell selected) */
+    .letter-picker {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--cream);
+      border-top: 2px solid var(--sepia);
+      padding: 1rem;
+      z-index: 100;
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+      box-shadow: 0 -8px 32px var(--shadow);
+    }
+
+    .letter-picker.open {
+      transform: translateY(0);
+    }
+
+    .picker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .picker-header p {
+      font-size: 0.8rem;
+      color: var(--slate);
+    }
+
+    .picker-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: var(--ink);
+      padding: 0.25rem;
+    }
+
+    .picker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+      gap: 0.4rem;
+    }
+
+    .picker-letter {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      border: 1.5px solid rgba(200, 169, 110, 0.5);
+      background: var(--paper);
+      font-family: 'DM Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+    }
+
+    .picker-letter:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .picker-letter.unavailable {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
+    .picker-letter.unavailable:hover {
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .submit-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Scoring Screen ──────────────────────────────────────── */
+    #screen-scoring {
+      padding: 1.5rem;
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+      gap: 1rem;
+    }
+
+    .scoring-header {
+      text-align: center;
+      padding-top: 1rem;
+    }
+
+    .scoring-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .scoring-header p {
+      color: var(--slate);
+      font-size: 0.82rem;
+    }
+
+    .scoring-board-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .scoring-board {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    .scoring-cell {
+      aspect-ratio: 1;
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.5);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.9rem, 3vw, 1.2rem);
+      font-weight: 500;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .scoring-cell.filled {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    .submit-hint {
+      font-size: 0.8rem;
+      color: var(--slate);
+      text-align: center;
+    }
+
+    .waiting-msg {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--slate);
+      font-size: 0.88rem;
+    }
+
+    .waiting-msg strong {
+      display: block;
+      font-size: 1.1rem;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── Results Screen ──────────────────────────────────────── */
+    #screen-results {
+      padding: 1.5rem;
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+      gap: 1rem;
+    }
+
+    .results-header {
+      text-align: center;
+      padding-top: 1rem;
+    }
+
+    .results-header h1 {
+      font-size: 2.5rem;
+    }
+
+    .results-header p {
+      color: var(--slate);
+      font-size: 0.82rem;
+      margin-top: 0.25rem;
+    }
+
+    .leaderboard {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .lb-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.35);
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      animation: slideIn 0.3s ease both;
+    }
+
+    .lb-row:nth-child(1) {
+      animation-delay: 0.05s;
+      border-left: 4px solid var(--gold);
+    }
+
+    .lb-row:nth-child(2) {
+      animation-delay: 0.10s;
+      border-left: 4px solid var(--slate);
+    }
+
+    .lb-row:nth-child(3) {
+      animation-delay: 0.15s;
+      border-left: 4px solid var(--rust);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .lb-rank {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--sepia);
+      min-width: 2rem;
+      text-align: center;
+    }
+
+    .lb-name {
+      font-size: 0.95rem;
+      flex: 1;
+    }
+
+    .lb-score {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .lb-words {
+      font-size: 0.72rem;
+      color: var(--slate);
+      margin-top: 0.1rem;
+    }
+
+    .lb-name-wrap {
+      flex: 1;
+    }
+
+    .words-found {
+      background: var(--cream);
+      border: 1.5px solid rgba(200, 169, 110, 0.4);
+      border-radius: 4px;
+      padding: 1rem 1.25rem;
+    }
+
+    .words-found h3 {
+      font-size: 0.88rem;
+      margin-bottom: 0.75rem;
+      font-style: italic;
+    }
+
+    .word-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .word-chip {
+      background: var(--forest);
+      color: var(--paper);
+      border-radius: 3px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.82rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .word-chip:hover {
+      transform: translateY(-1px);
+      opacity: 0.96;
+    }
+
+    .word-chip span {
+      opacity: 0.7;
+      font-size: 0.72rem;
+      margin-left: 0.25rem;
+    }
+
+    .definition-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 18, 8, 0.58);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 2000;
+    }
+
+    .definition-modal.visible {
+      display: flex;
+    }
+
+    .definition-dialog {
+      width: min(520px, 100%);
+      max-height: 80vh;
+      overflow: auto;
+      background: var(--paper);
+      border: 1.5px solid rgba(200, 169, 110, 0.5);
+      border-radius: 12px;
+      box-shadow: 0 18px 50px rgba(26, 18, 8, 0.24);
+      padding: 1.25rem 1.25rem 1rem;
+      position: relative;
+    }
+
+    .definition-close {
+      position: absolute;
+      right: 0.8rem;
+      top: 0.8rem;
+      border: none;
+      background: transparent;
+      color: var(--slate);
+      font-size: 1.25rem;
+      cursor: pointer;
+    }
+
+    .definition-kicker {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--slate);
+      margin-bottom: 0.5rem;
+    }
+
+    #definition-word {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .definition-loading,
+    .definition-empty,
+    .definition-error {
+      color: var(--slate);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .definition-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .definition-meaning {
+      background: var(--cream);
+      border: 1px solid rgba(200, 169, 110, 0.35);
+      border-radius: 8px;
+      padding: 0.8rem 0.9rem;
+    }
+
+    .definition-meaning strong {
+      display: block;
+      margin-bottom: 0.35rem;
+      color: var(--forest);
+      text-transform: capitalize;
+    }
+
+    .definition-meaning ul {
+      padding-left: 1.1rem;
+      color: var(--ink);
+    }
+
+    .definition-meaning li {
+      margin-bottom: 0.4rem;
+      line-height: 1.5;
+    }
+
+    /* ── Toast ────────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 0.6rem 1.2rem;
+      border-radius: 100px;
+      font-size: 0.82rem;
+      opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 1000;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Pulse animation for active turn ─────────────────────── */
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(45, 90, 61, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 8px rgba(45, 90, 61, 0);
+      }
+    }
+
+    .turn-badge.your-turn {
+      animation: pulse 2s ease infinite;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────────── */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--sepia);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════════════════
+     LANDING SCREEN
+══════════════════════════════════════════════════════ -->
+  <div id="screen-landing" class="screen active">
+    <div class="landing-inner">
+      <h1 class="wordmark">Words<em>worth</em></h1>
+      <p class="tagline">A word-grid game for sharp minds</p>
+
+      <div class="card">
+        <h2>Create a new game</h2>
+        <div class="input-group">
+          <input type="text" id="create-name" placeholder="Your name" maxlength="20" autocomplete="off" />
+        </div>
+        <button class="btn btn-primary" onclick="createRoom()">Create Room</button>
+      </div>
+
+      <div class="divider">or</div>
+
+      <div class="card">
+        <h2>Join a game</h2>
+        <div class="input-group">
+          <input type="text" id="join-name" placeholder="Your name" maxlength="20" autocomplete="off" />
+          <input type="text" id="join-code" placeholder="Room code (e.g. XKQZ)" maxlength="4" autocomplete="off"
+            style="text-transform:uppercase;letter-spacing:0.2em;" />
+        </div>
+        <button class="btn btn-secondary" onclick="joinRoom()">Join Room</button>
+      </div>
+
+      <div id="landing-error" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+     LOBBY SCREEN
+══════════════════════════════════════════════════════ -->
+  <div id="screen-lobby" class="screen">
+    <div class="lobby-header">
+      <h1>Wordsworth</h1>
+      <p class="room-hint">Share this code with players:</p>
+      <div class="room-code" id="lobby-room-code">----</div>
+      <p class="room-hint" id="lobby-player-count">Waiting for players…</p>
+    </div>
+
+    <div class="player-list-wrap">
+      <p class="player-list-title">Players in room</p>
+      <ul class="player-list" id="lobby-player-list"></ul>
+    </div>
+
+    <div class="card" style="padding:1rem">
+      <p style="font-size:0.8rem;color:var(--slate);margin-bottom:0.75rem;">
+        <strong>How to play:</strong> Each player calls one letter per turn (randomly ordered).
+        Place letters on your personal 5x5 grid to form words horizontally or vertically.
+        3-letter words = 3pts, 4-letter = 4pts, 5-letter = 10pts. Highest score wins!
+      </p>
+    </div>
+
+    <div id="lobby-host-controls" style="display:none; flex-direction:column; gap:0.5rem;">
+      <label style="font-size:0.8rem; color:var(--slate);">Turn Timer (seconds):</label>
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        <input type="number" id="timer-input" value="30" min="1" max="300"
+          style="padding: 0.5rem; border-radius: 4px; font-family: 'DM Mono', monospace; background: var(--paper); border: 1.5px solid rgba(200,169,110,0.5); width:80px;">
+        <label style="font-size:0.8rem; color:var(--ink); display:flex; align-items:center; gap:0.25rem;">
+          <input type="checkbox" id="timer-off-cb" onchange="toggleTimerInput(this)"> No Timer
+        </label>
+      </div>
+      <button class="btn btn-forest" onclick="startGame()" id="btn-start" style="margin-top:0.25rem;">Start
+        Game</button>
+    </div>
+    <div id="lobby-waiting-msg" style="text-align:center;font-size:0.82rem;color:var(--slate);display:none;">
+      Waiting for the host to start the game…
+    </div>
+
+    <div id="lobby-error" class="error-msg"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+     GAME SCREEN
+══════════════════════════════════════════════════════ -->
+  <div id="screen-game" class="screen">
+    <div class="game-header">
+      <span class="game-title">Wordsworth</span>
+      <div id="timer-display" style="font-size:1.5rem; font-weight:bold; color:var(--red); display:none;">30s</div>
+      <div class="turn-badge" id="turn-badge">
+        <span>Current turn</span>
+        <strong id="turn-player-name">—</strong>
+      </div>
+      <div style="font-size:0.75rem;color:var(--slate);text-align:right;">
+        Turn <span id="turn-index">0</span>/<span id="turn-total">0</span>
+      </div>
+    </div>
+
+    <!-- Call panel (only visible on your turn) -->
+    <div class="call-panel" id="call-panel">
+      <p>It's your turn — choose a letter to call for all players:</p>
+      <div class="alphabet-grid" id="alphabet-grid"></div>
+    </div>
+
+
+
+    <!-- Player's 5x5 board -->
+    <div class="board-wrap">
+      <p class="board-label">Your board — tap an empty cell</p>
+      <div class="board" id="game-board"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+     SCORING SCREEN
+══════════════════════════════════════════════════════ -->
+  <div id="screen-scoring" class="screen">
+    <div class="scoring-header">
+      <h1>Final Board</h1>
+      <p>All letters have been called. Review and submit your board.</p>
+    </div>
+
+    <div class="scoring-board-wrap">
+      <p class="board-label">Your board</p>
+      <div class="scoring-board" id="scoring-board"></div>
+    </div>
+
+    <div id="scoring-submit-area">
+      <p class="submit-hint">Happy with your placements? Submit to reveal scores.</p>
+      <div class="submit-row">
+        <button class="btn btn-primary" onclick="submitBoard()" id="btn-submit">Submit My Board</button>
+      </div>
+      <div id="scoring-error" class="error-msg"></div>
+    </div>
+
+    <div id="scoring-waiting" class="waiting-msg" style="display:none;">
+      <strong>Board submitted!</strong>
+      Waiting for other players… (<span id="submitted-count">0</span>/<span id="submitted-total">0</span> done)
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+     RESULTS SCREEN
+══════════════════════════════════════════════════════ -->
+  <div id="screen-results" class="screen">
+    <div class="results-header">
+      <h1>Results</h1>
+      <p>Final leaderboard</p>
+    </div>
+
+    <div class="leaderboard" id="leaderboard"></div>
+
+    <div class="words-found" id="my-words-wrap" style="display:none;">
+      <h3>Your words</h3>
+      <div class="word-chips" id="my-words-list"></div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="goHome()">Back to Home</button>
+  </div>
+
+  <div id="definition-modal" class="definition-modal" aria-hidden="true">
+    <div class="definition-dialog" role="dialog" aria-modal="true" aria-labelledby="definition-word">
+      <button class="definition-close" type="button" onclick="closeDefinitionModal()" aria-label="Close definition">✕</button>
+      <p class="definition-kicker">Dictionary</p>
+      <h3 id="definition-word">Word</h3>
+      <div id="definition-content" class="definition-content"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════
+    // State
+    // ═══════════════════════════════════════════════════════
+    const socket = io();
+    let state = {
+      playerId: null,
+      playerName: null,
+      roomId: null,
+      isHost: false,
+      hostId: null,
+      phase: 'lobby',
+      players: [],
+      calledLetters: [],
+      currentTurnPlayerId: null,
+      turnIndex: 0,
+      totalTurns: 0,
+      currentLetter: null,
+      grid: Array(25).fill(''),   // player's own 5x5 board
+      selectedCell: null,
+      submitted: false,
+      placedThisTurn: false,
+      myScore: 0,
+      myWords: []
+    };
+
+    // ═══════════════════════════════════════════════════════
+    // Screen management
+    // ═══════════════════════════════════════════════════════
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + id).classList.add('active');
+    }
+
+    function toast(msg, duration = 2500) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), duration);
+    }
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.classList.add('visible');
+      setTimeout(() => el.classList.remove('visible'), 4000);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Landing actions
+    // ═══════════════════════════════════════════════════════
+    function createRoom() {
+      const name = document.getElementById('create-name').value.trim();
+      if (!name) return showError('landing-error', 'Please enter your name.');
+      state.playerName = name;
+      socket.emit('create_room', { playerName: name });
+    }
+
+    function joinRoom() {
+      const name = document.getElementById('join-name').value.trim();
+      const code = document.getElementById('join-code').value.trim().toUpperCase();
+      if (!name) return showError('landing-error', 'Please enter your name.');
+      if (!code || code.length !== 4) return showError('landing-error', 'Please enter a 4-character room code.');
+      state.playerName = name;
+      socket.emit('join_room', { roomId: code, playerName: name });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Lobby actions
+    // ═══════════════════════════════════════════════════════
+    function startGame() {
+      const cb = document.getElementById('timer-off-cb');
+      let timer = 0;
+      if (!cb.checked) {
+        timer = parseInt(document.getElementById('timer-input').value);
+        if (isNaN(timer) || timer < 1) timer = 30;
+      }
+      socket.emit('start_game', { turnTimer: timer });
+    }
+
+    function toggleTimerInput(cb) {
+      const input = document.getElementById('timer-input');
+      if (cb.checked) {
+        input.value = '';
+        input.disabled = true;
+        input.style.opacity = '0.5';
+      } else {
+        input.value = '30';
+        input.disabled = false;
+        input.style.opacity = '1';
+      }
+    }
+
+    function renderLobby() {
+      document.getElementById('lobby-room-code').textContent = state.roomId;
+      document.getElementById('lobby-player-count').textContent =
+        `${state.players.length} player${state.players.length !== 1 ? 's' : ''} joined`;
+
+      const list = document.getElementById('lobby-player-list');
+      list.innerHTML = '';
+      state.players.forEach(p => {
+        const li = document.createElement('li');
+        const initial = p.name.charAt(0).toUpperCase();
+        const isHost = p.id === state.hostId;
+        const isMe = p.id === state.playerId;
+        li.innerHTML = `
+      <div class="player-avatar">${initial}</div>
+      <span>${p.name}</span>
+      ${isHost ? '<span class="host-badge">HOST</span>' : ''}
+      ${isMe && !isHost ? '<span class="you-badge">YOU</span>' : ''}
+    `;
+        list.appendChild(li);
+      });
+
+      const hostCtrl = document.getElementById('lobby-host-controls');
+      const waitMsg = document.getElementById('lobby-waiting-msg');
+      if (state.isHost) {
+        hostCtrl.style.display = 'flex';
+        waitMsg.style.display = 'none';
+        document.getElementById('btn-start').disabled = state.players.length < 2;
+      } else {
+        hostCtrl.style.display = 'none';
+        waitMsg.style.display = 'block';
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Game board rendering
+    // ═══════════════════════════════════════════════════════
+    function buildBoard() {
+      const board = document.getElementById('game-board');
+      board.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell' + (state.grid[i] ? ' filled' : '');
+        cell.textContent = state.grid[i] || '';
+        cell.dataset.index = i;
+        cell.addEventListener('click', () => selectCell(i));
+        board.appendChild(cell);
+      }
+    }
+
+    function updateBoard() {
+      const cells = document.querySelectorAll('#game-board .cell');
+      cells.forEach((cell, i) => {
+        cell.textContent = state.grid[i] || '';
+        cell.className = 'cell' + (state.grid[i] ? ' filled' : '');
+      });
+    }
+
+    function selectCell(index) {
+      if (state.phase !== 'playing') return;
+      if (!state.currentLetter) {
+        toast("Waiting for a letter to be called...");
+        return;
+      }
+      if (state.placedThisTurn) {
+        toast("You already placed a letter this turn!");
+        return;
+      }
+      if (state.grid[index]) {
+        toast("Cell is already occupied!");
+        return;
+      }
+
+      state.selectedCell = index;
+      placeLetter(state.currentLetter);
+    }
+
+    function placeLetter(letter) {
+      state.grid[state.selectedCell] = letter;
+      state.placedThisTurn = true;
+      updateBoard();
+      toast(`Placed ${letter} in cell ${state.selectedCell + 1}`);
+      socket.emit('letter_placed', { grid: state.grid });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Called letters log
+    // ═══════════════════════════════════════════════════════
+    function renderCalledLetters() {
+      // intentionally empty as requested
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Turn UI
+    // ═══════════════════════════════════════════════════════
+    function updateTurnUI(currentPlayerId, playerName, turnIndex, totalTurns) {
+      state.currentTurnPlayerId = currentPlayerId;
+      state.turnIndex = turnIndex;
+      state.totalTurns = totalTurns;
+
+      const badge = document.getElementById('turn-badge');
+      const nameEl = document.getElementById('turn-player-name');
+      const idx = document.getElementById('turn-index');
+      const tot = document.getElementById('turn-total');
+      const callPanel = document.getElementById('call-panel');
+
+      idx.textContent = turnIndex + 1;
+      tot.textContent = totalTurns;
+
+      const isMyTurn = currentPlayerId === state.playerId;
+
+      if (isMyTurn) {
+        badge.className = 'turn-badge your-turn';
+        nameEl.textContent = 'Your turn!';
+        callPanel.classList.add('visible');
+        buildAlphabet();
+        toast('Your turn — call a letter!', 3000);
+      } else {
+        badge.className = 'turn-badge';
+        nameEl.textContent = playerName + '\'s turn';
+        callPanel.classList.remove('visible');
+      }
+    }
+
+    function buildAlphabet() {
+      const grid = document.getElementById('alphabet-grid');
+      grid.innerHTML = '';
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
+        const btn = document.createElement('button');
+        btn.className = 'letter-btn';
+        btn.textContent = letter;
+        btn.addEventListener('click', () => callLetter(letter));
+        grid.appendChild(btn);
+      });
+    }
+
+    function callLetter(letter) {
+      socket.emit('call_letter', { letter });
+      document.getElementById('call-panel').classList.remove('visible');
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Scoring screen
+    // ═══════════════════════════════════════════════════════
+    function buildScoringBoard() {
+      const board = document.getElementById('scoring-board');
+      board.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'scoring-cell' + (state.grid[i] ? ' filled' : '');
+        cell.textContent = state.grid[i] || '';
+        board.appendChild(cell);
+      }
+    }
+
+    function submitBoard() {
+      socket.emit('submit_board', { grid: state.grid });
+      document.getElementById('btn-submit').disabled = true;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Results
+    // ═══════════════════════════════════════════════════════
+    async function fetchWordDefinition(word) {
+      const safeWord = String(word || '').trim();
+      if (!safeWord) throw new Error('No word provided.');
+
+      const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(safeWord.toLowerCase())}`;
+      console.log('Dictionary lookup:', url);
+
+      const response = await fetch(url, {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store'
+      });
+
+      const responseText = await response.text();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (jsonError) {
+        console.error('Dictionary JSON parse failed:', jsonError, responseText);
+        throw new Error('Dictionary response was invalid JSON.');
+      }
+
+      if (!response.ok) {
+        console.error('Dictionary API error:', response.status, responseText);
+        throw new Error(`Dictionary lookup failed (${response.status}).`);
+      }
+
+      const entries = Array.isArray(data) ? data : [];
+      if (!entries.length) throw new Error('Definition not found.');
+
+      const meanings = [];
+      for (const entry of entries) {
+        const entryMeanings = Array.isArray(entry?.meanings) ? entry.meanings : [];
+        for (const meaning of entryMeanings) {
+          const definitions = (meaning?.definitions || [])
+            .map(d => typeof d?.definition === 'string' ? d.definition.trim() : null)
+            .filter(Boolean)
+            .slice(0, 2);
+
+          if (definitions.length) {
+            meanings.push({
+              partOfSpeech: meaning?.partOfSpeech || 'word',
+              definitions
+            });
+          }
+        }
+      }
+
+      if (!meanings.length) throw new Error('Definition not found.');
+      return { word: safeWord.toLowerCase(), meanings: meanings.slice(0, 3) };
+    }
+
+    function renderDefinitionModal(word, meanings) {
+      const modal = document.getElementById('definition-modal');
+      const title = document.getElementById('definition-word');
+      const content = document.getElementById('definition-content');
+      title.textContent = word.toUpperCase();
+      content.innerHTML = '';
+
+      if (!meanings || !meanings.length) {
+        content.innerHTML = '<div class="definition-empty">No dictionary entry was found for this word.</div>';
+        modal.classList.add('visible');
+        modal.setAttribute('aria-hidden', 'false');
+        return;
+      }
+
+      meanings.forEach((meaning) => {
+        const block = document.createElement('div');
+        block.className = 'definition-meaning';
+        const label = document.createElement('strong');
+        label.textContent = meaning.partOfSpeech;
+        block.appendChild(label);
+
+        const list = document.createElement('ul');
+        meaning.definitions.forEach((definition) => {
+          const item = document.createElement('li');
+          item.textContent = definition;
+          list.appendChild(item);
+        });
+        block.appendChild(list);
+        content.appendChild(block);
+      });
+
+      modal.classList.add('visible');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeDefinitionModal() {
+      const modal = document.getElementById('definition-modal');
+      modal.classList.remove('visible');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function openWordDefinition(word) {
+      const modal = document.getElementById('definition-modal');
+      const content = document.getElementById('definition-content');
+      const title = document.getElementById('definition-word');
+
+      title.textContent = word.toUpperCase();
+      content.innerHTML = '<div class="definition-loading">Looking up the meaning…</div>';
+      modal.classList.add('visible');
+      modal.setAttribute('aria-hidden', 'false');
+
+      try {
+        const definition = await fetchWordDefinition(word);
+        renderDefinitionModal(definition.word, definition.meanings);
+      } catch (error) {
+        console.error('Word definition failed:', error);
+        content.innerHTML = `<div class="definition-error">${error && error.message ? error.message : 'No definition could be found for this word.'}</div>`;
+      }
+    }
+
+    function renderResults(leaderboard) {
+      const lb = document.getElementById('leaderboard');
+      lb.innerHTML = '';
+
+      leaderboard.forEach((entry, i) => {
+        const row = document.createElement('div');
+        row.className = 'lb-row';
+        row.style.animationDelay = `${0.05 + i * 0.06}s`;
+        row.style.flexDirection = 'column';
+        row.style.alignItems = 'stretch';
+        row.style.cursor = 'pointer';
+
+        const wordCount = entry.words ? entry.words.length : 0;
+
+        let boardHtml = '<div style="display:grid; grid-template-columns: repeat(5,1fr); gap:6px; max-width:260px; margin: 0 auto 1.25rem;">';
+        if (entry.board) {
+          entry.board.forEach(cell => {
+            boardHtml += `<div class="scoring-cell${cell ? ' filled' : ''}" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-family:'DM Mono', monospace; font-size:1.1rem; border:1.5px solid rgba(200,169,110,0.5); border-radius:4px;">${cell || ''}</div>`;
+          });
+        }
+        boardHtml += '</div>';
+
+        const wordsHtml = document.createElement('div');
+        wordsHtml.className = 'word-chips';
+        wordsHtml.style.display = 'flex';
+        wordsHtml.style.flexWrap = 'wrap';
+        wordsHtml.style.gap = '0.4rem';
+        wordsHtml.style.justifyContent = 'center';
+
+        if (entry.words && entry.words.length > 0) {
+          entry.words.forEach(w => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'word-chip';
+            chip.style.display = 'inline-flex';
+            chip.style.alignItems = 'center';
+            chip.style.background = 'var(--forest)';
+            chip.style.color = 'var(--paper)';
+            chip.style.borderRadius = '3px';
+            chip.style.padding = '0.25rem 0.6rem';
+            chip.style.fontSize = '0.82rem';
+            chip.textContent = w.word.toUpperCase();
+
+            const score = document.createElement('span');
+            score.textContent = `+${w.score}`;
+            score.style.opacity = '0.7';
+            score.style.fontSize = '0.72rem';
+            score.style.marginLeft = '0.25rem';
+            chip.appendChild(score);
+            chip.addEventListener('click', async (event) => {
+              event.stopPropagation();
+              await openWordDefinition(w.word);
+            });
+            wordsHtml.appendChild(chip);
+          });
+        } else {
+          const empty = document.createElement('span');
+          empty.style.fontSize = '0.8rem';
+          empty.style.color = 'var(--slate)';
+          empty.style.fontStyle = 'italic';
+          empty.textContent = 'No words found';
+          wordsHtml.appendChild(empty);
+        }
+
+        row.innerHTML = `
+          <div style="display:flex; align-items:center; gap:0.75rem; width:100%;">
+            <div class="lb-rank">${i + 1}</div>
+            <div class="lb-name-wrap" style="flex:1;">
+              <div class="lb-name">${entry.name}${entry.name === state.playerName ? ' <em style="font-size:0.75rem;color:var(--slate)">(you)</em>' : ''}</div>
+              <div class="lb-words">${wordCount} word${wordCount !== 1 ? 's' : ''} found <span style="opacity:0.6;font-size:0.7rem;margin-left:0.25rem;">(Tap to view)</span></div>
+            </div>
+            <div class="lb-score" style="font-family:'Playfair Display', serif; font-size:1.3rem; font-weight:700;">${entry.score}pt${entry.score !== 1 ? 's' : ''}</div>
+          </div>
+          <div class="lb-details" style="display:none; margin-top:1rem; padding-top:1rem; border-top:1px dashed rgba(200,169,110,0.5); width:100%;">
+            <p style="font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--slate); text-align:center; margin-bottom:0.75rem;">Final Board</p>
+            ${boardHtml}
+            <p style="font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--slate); text-align:center; margin-bottom:0.5rem;">Words Found</p>
+          </div>
+        `;
+
+        row.querySelector('.lb-details').appendChild(wordsHtml);
+
+        row.addEventListener('click', () => {
+          const details = row.querySelector('.lb-details');
+          details.style.display = details.style.display === 'none' ? 'block' : 'none';
+        });
+
+        lb.appendChild(row);
+      });
+
+      document.getElementById('definition-modal').addEventListener('click', (event) => {
+        if (event.target.id === 'definition-modal') closeDefinitionModal();
+      });
+
+      // ensure legacy 'my words' is hidden since it's redundant now
+      document.getElementById('my-words-wrap').style.display = 'none';
+
+      showScreen('results');
+    }
+
+    function goHome() {
+      state = {
+        playerId: state.playerId,
+        playerName: null,
+        roomId: null,
+        isHost: false,
+        hostId: null,
+        phase: 'lobby',
+        players: [],
+        calledLetters: [],
+        currentTurnPlayerId: null,
+        turnIndex: 0,
+        totalTurns: 0,
+        currentLetter: null,
+        grid: Array(25).fill(''),
+        selectedCell: null,
+        submitted: false,
+        myScore: 0,
+        myWords: []
+      };
+      showScreen('landing');
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Socket events
+    // ═══════════════════════════════════════════════════════
+    socket.on('room_created', ({ roomId, playerId }) => {
+      state.playerId = playerId;
+      state.roomId = roomId;
+      state.isHost = true;
+    });
+
+    socket.on('room_joined', ({ roomId, playerId }) => {
+      state.playerId = playerId;
+      state.roomId = roomId;
+    });
+
+    socket.on('room_state', (room) => {
+      state.players = room.players;
+      state.hostId = room.hostId;
+      state.isHost = state.playerId === room.hostId;
+      showScreen('lobby');
+      renderLobby();
+    });
+
+    socket.on('player_left', ({ playerName, players }) => {
+      state.players = players;
+      renderLobby();
+      toast(`${playerName} left the room`);
+    });
+
+    socket.on('host_changed', ({ newHostId, newHostName }) => {
+      state.hostId = newHostId;
+      state.isHost = state.playerId === newHostId;
+      renderLobby();
+      toast(`${newHostName} is now the host`);
+    });
+
+
+    let countdownInterval = null;
+    function startVisualTimer(seconds) {
+      clearInterval(countdownInterval);
+      const display = document.getElementById('timer-display');
+      if (seconds <= 0) {
+        display.style.display = 'none';
+        return;
+      }
+      display.style.display = 'block';
+      let left = seconds;
+      display.textContent = left + 's';
+      countdownInterval = setInterval(() => {
+        left--;
+        if (left <= 0) {
+          clearInterval(countdownInterval);
+          display.textContent = '0s';
+        } else {
+          display.textContent = left + 's';
+        }
+      }, 1000);
+    }
+
+    socket.on('game_started', ({ turnOrder, currentTurn, totalTurns, turnTimer }) => {
+      state.phase = 'playing';
+      state.calledLetters = [];
+      state.grid = Array(25).fill('');
+      state.totalTurns = totalTurns;
+
+      showScreen('game');
+      buildBoard();
+      renderCalledLetters();
+      updateTurnUI(currentTurn.playerId, currentTurn.playerName, 0, totalTurns);
+      startVisualTimer(turnTimer);
+    });
+
+    socket.on('letter_called', ({ letter, calledBy, calledLetters, turnsLeft, turnTimer }) => {
+      state.calledLetters = calledLetters;
+      state.currentLetter = letter;
+      state.placedThisTurn = false;
+      renderCalledLetters();
+      if (calledBy !== state.playerName) {
+        toast(`${calledBy} called "${letter}"`);
+      }
+
+      document.getElementById('turn-badge').className = 'turn-badge';
+      document.getElementById('turn-player-name').textContent = 'Waiting for placements...';
+      document.getElementById('call-panel').classList.remove('visible');
+      startVisualTimer(turnTimer);
+    });
+
+    socket.on('next_turn', ({ playerId, playerName, turnIndex, totalTurns, turnTimer }) => {
+      state.currentLetter = null;
+      updateTurnUI(playerId, playerName, turnIndex, totalTurns);
+      startVisualTimer(turnTimer);
+    });
+
+    socket.on('force_place', ({ letter }) => {
+      if (!state.placedThisTurn) {
+        let emptyIndices = [];
+        for (let i = 0; i < 25; i++) {
+          if (!state.grid[i]) emptyIndices.push(i);
+        }
+        if (emptyIndices.length > 0) {
+          const randIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+          state.selectedCell = randIndex;
+          toast('Time is up! Letter auto-placed randomly.', 4000);
+          placeLetter(letter);
+        }
+      }
+    });
+
+    socket.on('all_letters_called', ({ calledLetters }) => {
+      state.calledLetters = calledLetters;
+      state.phase = 'scoring';
+      buildScoringBoard();
+      showScreen('scoring');
+      toast('All letters called! Submit your board.', 4000);
+    });
+
+    socket.on('board_accepted', ({ score, words }) => {
+      state.myScore = score;
+      state.myWords = words;
+      state.submitted = true;
+      document.getElementById('scoring-submit-area').style.display = 'none';
+      document.getElementById('scoring-waiting').style.display = 'block';
+    });
+
+    socket.on('submission_update', ({ submitted, total, playerName }) => {
+      document.getElementById('submitted-count').textContent = submitted;
+      document.getElementById('submitted-total').textContent = total;
+      if (playerName !== state.playerName) {
+        toast(`${playerName} submitted their board`);
+      }
+    });
+
+    socket.on('game_over', ({ leaderboard }) => {
+      renderResults(leaderboard);
+    });
+
+    socket.on('error', ({ message }) => {
+      const screen = document.querySelector('.screen.active')?.id;
+      if (screen === 'screen-landing') showError('landing-error', message);
+      else if (screen === 'screen-lobby') showError('lobby-error', message);
+      else if (screen === 'screen-scoring') showError('scoring-error', message);
+      else toast(message, 3500);
+    });
+
+    // Allow Enter key on landing inputs
+    document.getElementById('create-name').addEventListener('keydown', e => { if (e.key === 'Enter') createRoom(); });
+    document.getElementById('join-code').addEventListener('keydown', e => { if (e.key === 'Enter') joinRoom(); });
+    document.getElementById('join-name').addEventListener('keydown', e => { if (e.key === 'Enter') joinRoom(); });
+
+    // Auto-uppercase room code input
+    document.getElementById('join-code').addEventListener('input', e => {
+      e.target.value = e.target.value.toUpperCase();
+    });
+  </script>
+</body>
+
+</html>
