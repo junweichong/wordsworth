@@ -105,8 +105,8 @@
 
     .info-button {
       position: absolute;
-      top: 0;
-      right: 0;
+      top: 0.65rem;
+      right: 0.65rem;
       width: 2rem;
       height: 2rem;
       border: 1.5px solid rgba(26, 18, 8, 0.35);
@@ -1013,6 +1013,34 @@
 
   <!-- ══════════════════════════════════════════════════════
      LANDING SCREEN
+══════════════════════════════════════════════════════ -->
+  <div id="screen-landing" class="screen active">
+    <div class="landing-inner">
+      <h1 class="wordmark">Words<em>worth</em></h1>
+      <p class="tagline">A word-grid game for sharp minds</p>
+
+      <div class="card" style="position:relative;">
+        <button class="info-button" type="button" onclick="openHowToPlay()" aria-label="How to play"
+          title="How to play">i</button>
+        <h2>Create a new game</h2>
+        <div class="input-group">
+          <input type="text" id="create-name" placeholder="Your name" maxlength="20" autocomplete="off" />
+        </div>
+        <button class="btn btn-primary" onclick="createRoom()">Create Room</button>
+      </div>
+
+      <div class="divider">or</div>
+
+      <div class="card">
+        <h2>Join a game</h2>
+        <div class="input-group">
+          <input type="text" id="join-name" placeholder="Your name" maxlength="20" autocomplete="off" />
+          <input type="text" id="join-code" placeholder="Room code (e.g. XKQZ)" maxlength="4" autocomplete="off"
+            style="text-transform:uppercase;letter-spacing:0.2em;" />
+        </div>
+        <button class="btn btn-secondary" onclick="joinRoom()">Join Room</button>
+      </div>
+
       <div id="landing-error" class="error-msg"></div>
     </div>
   </div>
