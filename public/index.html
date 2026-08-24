@@ -723,87 +723,6 @@
       color: var(--ink);
     }
 
-    .submit-row {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 0.5rem;
-    }
-
-    /* ── Scoring Screen ──────────────────────────────────────── */
-    #screen-scoring {
-      padding: 1.5rem;
-      max-width: 640px;
-      margin: 0 auto;
-      width: 100%;
-      gap: 1rem;
-    }
-
-    .scoring-header {
-      text-align: center;
-      padding-top: 1rem;
-    }
-
-    .scoring-header h1 {
-      font-size: 2rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .scoring-header p {
-      color: var(--slate);
-      font-size: 0.82rem;
-    }
-
-    .scoring-board-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .scoring-board {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 5px;
-    }
-
-    .scoring-cell {
-      aspect-ratio: 1;
-      background: var(--cream);
-      border: 1.5px solid rgba(200, 169, 110, 0.5);
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: clamp(0.9rem, 3vw, 1.2rem);
-      font-weight: 500;
-      font-family: 'DM Mono', monospace;
-    }
-
-    .scoring-cell.filled {
-      background: var(--ink);
-      color: var(--paper);
-      border-color: var(--ink);
-    }
-
-    .submit-hint {
-      font-size: 0.8rem;
-      color: var(--slate);
-      text-align: center;
-    }
-
-    .waiting-msg {
-      text-align: center;
-      padding: 1.5rem;
-      color: var(--slate);
-      font-size: 0.88rem;
-    }
-
-    .waiting-msg strong {
-      display: block;
-      font-size: 1.1rem;
-      color: var(--ink);
-      margin-bottom: 0.5rem;
-    }
-
     /* ── Results Screen ──────────────────────────────────────── */
     #screen-results {
       padding: 1.5rem;
@@ -1094,34 +1013,6 @@
 
   <!-- ══════════════════════════════════════════════════════
      LANDING SCREEN
-══════════════════════════════════════════════════════ -->
-  <div id="screen-landing" class="screen active">
-    <div class="landing-inner">
-      <h1 class="wordmark">Words<em>worth</em></h1>
-      <button class="info-button" type="button" onclick="openHowToPlay()" aria-label="How to play"
-        title="How to play">i</button>
-      <p class="tagline">A word-grid game for sharp minds</p>
-
-      <div class="card">
-        <h2>Create a new game</h2>
-        <div class="input-group">
-          <input type="text" id="create-name" placeholder="Your name" maxlength="20" autocomplete="off" />
-        </div>
-        <button class="btn btn-primary" onclick="createRoom()">Create Room</button>
-      </div>
-
-      <div class="divider">or</div>
-
-      <div class="card">
-        <h2>Join a game</h2>
-        <div class="input-group">
-          <input type="text" id="join-name" placeholder="Your name" maxlength="20" autocomplete="off" />
-          <input type="text" id="join-code" placeholder="Room code (e.g. XKQZ)" maxlength="4" autocomplete="off"
-            style="text-transform:uppercase;letter-spacing:0.2em;" />
-        </div>
-        <button class="btn btn-secondary" onclick="joinRoom()">Join Room</button>
-      </div>
-
       <div id="landing-error" class="error-msg"></div>
     </div>
   </div>
@@ -1206,34 +1097,6 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-     SCORING SCREEN
-══════════════════════════════════════════════════════ -->
-  <div id="screen-scoring" class="screen">
-    <div class="scoring-header">
-      <h1>Final Board</h1>
-      <p>All letters have been called. Review and submit your board.</p>
-    </div>
-
-    <div class="scoring-board-wrap">
-      <p class="board-label">Your board</p>
-      <div class="scoring-board" id="scoring-board"></div>
-    </div>
-
-    <div id="scoring-submit-area">
-      <p class="submit-hint">Happy with your placements? Submit to reveal scores.</p>
-      <div class="submit-row">
-        <button class="btn btn-primary" onclick="submitBoard()" id="btn-submit">Submit My Board</button>
-      </div>
-      <div id="scoring-error" class="error-msg"></div>
-    </div>
-
-    <div id="scoring-waiting" class="waiting-msg" style="display:none;">
-      <strong>Board submitted!</strong>
-      Waiting for other players… (<span id="submitted-count">0</span>/<span id="submitted-total">0</span> done)
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════
      RESULTS SCREEN
 ══════════════════════════════════════════════════════ -->
   <div id="screen-results" class="screen">
@@ -1268,10 +1131,10 @@
       <h3 id="how-to-play-title">Build words together</h3>
       <div class="definition-content">
         <ol class="how-to-play-list">
-          <li>Join a room with at least one other player.</li>
+          <li>Create your own room or join a room with at least one other player.</li>
           <li>Players take turns choosing a letter for everyone.</li>
           <li>Place each letter on your 5x5 board.</li>
-          <li>When all 25 letters are placed, submit your board.</li>
+          <li>When all 25 letters are placed, your board is scored automatically.</li>
           <li>Make words across or down to score points.</li>
         </ol>
         <p><strong>Scoring:</strong> 3-letter words score 3 points, 4-letter words score 4 points, and 5-letter words score 10 points.</p>
@@ -1302,10 +1165,7 @@
       currentLetter: null,
       grid: Array(25).fill(''),   // player's own 5x5 board
       selectedCell: null,
-      submitted: false,
       placedThisTurn: false,
-      myScore: 0,
-      myWords: []
     };
 
     // ═══════════════════════════════════════════════════════
@@ -1523,25 +1383,6 @@
     function callLetter(letter) {
       socket.emit('call_letter', { letter });
       document.getElementById('call-panel').classList.remove('visible');
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // Scoring screen
-    // ═══════════════════════════════════════════════════════
-    function buildScoringBoard() {
-      const board = document.getElementById('scoring-board');
-      board.innerHTML = '';
-      for (let i = 0; i < 25; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'scoring-cell' + (state.grid[i] ? ' filled' : '');
-        cell.textContent = state.grid[i] || '';
-        board.appendChild(cell);
-      }
-    }
-
-    function submitBoard() {
-      socket.emit('submit_board', { grid: state.grid });
-      document.getElementById('btn-submit').disabled = true;
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1789,9 +1630,6 @@
         currentLetter: null,
         grid: Array(25).fill(''),
         selectedCell: null,
-        submitted: false,
-        myScore: 0,
-        myWords: []
       };
       showScreen('landing');
     }
@@ -1911,30 +1749,6 @@
       }
     });
 
-    socket.on('all_letters_called', ({ calledLetters }) => {
-      state.calledLetters = calledLetters;
-      state.phase = 'scoring';
-      buildScoringBoard();
-      showScreen('scoring');
-      toast('All letters called! Submit your board.', 4000);
-    });
-
-    socket.on('board_accepted', ({ score, words }) => {
-      state.myScore = score;
-      state.myWords = words;
-      state.submitted = true;
-      document.getElementById('scoring-submit-area').style.display = 'none';
-      document.getElementById('scoring-waiting').style.display = 'block';
-    });
-
-    socket.on('submission_update', ({ submitted, total, playerName }) => {
-      document.getElementById('submitted-count').textContent = submitted;
-      document.getElementById('submitted-total').textContent = total;
-      if (playerName !== state.playerName) {
-        toast(`${playerName} submitted their board`);
-      }
-    });
-
     socket.on('game_over', ({ leaderboard }) => {
       renderResults(leaderboard);
     });
@@ -1943,7 +1757,6 @@
       const screen = document.querySelector('.screen.active')?.id;
       if (screen === 'screen-landing') showError('landing-error', message);
       else if (screen === 'screen-lobby') showError('lobby-error', message);
-      else if (screen === 'screen-scoring') showError('scoring-error', message);
       else toast(message, 3500);
     });
 

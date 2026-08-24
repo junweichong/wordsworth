@@ -298,55 +298,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // PLAYER SUBMITS BOARD
-  socket.on('submit_board', ({ grid }) => {
-    const roomId = socket.data.roomId;
-    const room = rooms[roomId];
-    if (!room || room.phase !== 'scoring') return socket.emit('error', { message: 'Not in scoring phase.' });
-
-    const player = room.players.find(p => p.id === socket.id);
-    if (!player) return;
-    if (player.board !== null) return socket.emit('error', { message: 'Already submitted.' });
-
-    if (!Array.isArray(grid) || grid.length !== 25) {
-      return socket.emit('error', { message: 'Invalid board.' });
-    }
-
-    // Validate: the submitted board must contain the exact multiset of called letters
-    const submittedLetters = grid.filter(c => c).map(c => c.toUpperCase()).sort();
-    const officiallyCalled = room.calledLetters.map(cl => cl.letter.toUpperCase()).sort();
-
-    if (submittedLetters.join('') !== officiallyCalled.join('')) {
-      return socket.emit('error', { message: 'Board letters do not exactly match the called letters.' });
-    }
-
-    const { words, total } = scoreBoard(grid);
-    player.board = grid;
-    player.score = total;
-    player.words = words;
-
-    socket.emit('board_accepted', { score: total, words });
-
-    // notify room of submission progress
-    const submitted = room.players.filter(p => p.board !== null).length;
-    if (room.turnTimeout && submitted === room.players.length) clearTimeout(room.turnTimeout);
-    io.to(roomId).emit('submission_update', {
-      submitted,
-      total: room.players.length,
-      playerName: player.name
-    });
-
-    // All submitted?
-    if (submitted === room.players.length) {
-      const leaderboard = room.players
-        .map(p => ({ name: p.name, score: p.score, words: p.words, board: p.board }))
-        .sort((a, b) => b.score - a.score);
-
-      io.to(roomId).emit('game_over', { leaderboard });
-      console.log(`Game over in room ${roomId}`);
-    }
-  });
-
   // DISCONNECT
   socket.on('disconnect', () => {
     const roomId = socket.data.roomId;
