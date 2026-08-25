@@ -15,81 +15,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── In-memory store ──────────────────────────────────────────────
 const rooms = {};
 
-// ── Word list (built-in common English words, 3+ letters) ────────
-// We ship a small but solid dictionary. For production, swap with
-// a full /usr/share/dict/words file or a words npm package.
-let DICTIONARY = new Set();
-try {
-  const raw = fs.readFileSync(path.join(__dirname, 'words.txt'), 'utf8');
-  raw.split('\n').forEach(w => {
-    w = w.trim().toLowerCase();
-    if (w.length >= 3) DICTIONARY.add(w);
-  });
-  console.log(`Dictionary loaded: ${DICTIONARY.size} words`);
-} catch (e) {
-  console.warn('words.txt not found — using fallback mini-dictionary');
-  // Fallback: a small set so the game still runs
-  const fallback = ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had',
-    'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'now',
-    'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'does', 'got', 'let', 'man', 'new', 'put',
-    'say', 'she', 'too', 'use', 'cat', 'dog', 'run', 'sat', 'hit', 'big', 'cup', 'fun', 'hot',
-    'ice', 'jar', 'key', 'law', 'map', 'net', 'oak', 'pan', 'rat', 'sun', 'tax', 'van', 'wax',
-    'zip', 'able', 'area', 'army', 'away', 'baby', 'back', 'ball', 'band', 'bank', 'base',
-    'bath', 'bear', 'beat', 'been', 'bell', 'best', 'bird', 'blow', 'blue', 'boat', 'body',
-    'bomb', 'bond', 'bone', 'book', 'bore', 'born', 'both', 'bowl', 'burn', 'call', 'came',
-    'card', 'care', 'case', 'cash', 'cast', 'cave', 'cell', 'chat', 'chin', 'chip', 'city',
-    'clap', 'clay', 'clip', 'club', 'coal', 'coat', 'code', 'coin', 'cold', 'come', 'cook',
-    'cool', 'cope', 'copy', 'cord', 'core', 'corn', 'cost', 'coup', 'crew', 'crop', 'cure',
-    'dark', 'data', 'date', 'dawn', 'dead', 'deal', 'dear', 'debt', 'deep', 'deny', 'desk',
-    'diet', 'dirt', 'disk', 'door', 'dose', 'down', 'draw', 'drew', 'drop', 'drug', 'drum',
-    'dual', 'dull', 'dumb', 'dump', 'dust', 'duty', 'each', 'earn', 'ease', 'east', 'edge',
-    'else', 'even', 'ever', 'evil', 'exam', 'face', 'fact', 'fail', 'fair', 'fall', 'fame',
-    'farm', 'fast', 'fate', 'fear', 'feel', 'feet', 'fell', 'felt', 'file', 'fill', 'film',
-    'find', 'fine', 'fire', 'firm', 'fish', 'fist', 'five', 'flag', 'flat', 'flew', 'flip',
-    'flow', 'foam', 'fold', 'folk', 'fond', 'font', 'food', 'fool', 'foot', 'ford', 'fore',
-    'fork', 'form', 'fort', 'foul', 'four', 'free', 'from', 'full', 'fund', 'fury', 'fuse',
-    'gain', 'game', 'gang', 'gave', 'gear', 'gene', 'gift', 'girl', 'give', 'glad', 'glow',
-    'glue', 'goal', 'goes', 'gold', 'golf', 'gone', 'good', 'grab', 'gray', 'grew', 'grid',
-    'grip', 'grow', 'gulf', 'guru', 'gust', 'guys', 'hack', 'half', 'hall', 'hand', 'hang',
-    'hard', 'harm', 'hate', 'have', 'head', 'heal', 'heap', 'hear', 'heat', 'heel', 'held',
-    'help', 'here', 'hero', 'hide', 'high', 'hill', 'hint', 'hire', 'hold', 'hole', 'home',
-    'hook', 'hope', 'horn', 'host', 'hour', 'huge', 'hung', 'hunt', 'hurt', 'idea', 'idle',
-    'inch', 'info', 'into', 'iron', 'item', 'join', 'joke', 'jump', 'just', 'keen', 'kept',
-    'kick', 'kill', 'kind', 'king', 'kiss', 'knee', 'knew', 'know', 'lack', 'laid', 'lake',
-    'land', 'lane', 'last', 'late', 'lead', 'leaf', 'lean', 'left', 'lend', 'lens', 'less',
-    'lied', 'life', 'lift', 'like', 'lime', 'line', 'link', 'lion', 'list', 'live', 'load',
-    'loan', 'lock', 'loft', 'long', 'look', 'loop', 'lord', 'lose', 'loss', 'lost', 'loud',
-    'love', 'luck', 'lung', 'made', 'mail', 'main', 'make', 'mall', 'many', 'mark', 'mass',
-    'mate', 'math', 'meal', 'mean', 'meat', 'meet', 'melt', 'memo', 'mere', 'mesh', 'mild',
-    'mile', 'milk', 'mill', 'mind', 'mine', 'miss', 'mode', 'mood', 'moon', 'more', 'most',
-    'move', 'much', 'must', 'myth', 'nail', 'name', 'navy', 'near', 'neck', 'need', 'news',
-    'next', 'nice', 'nine', 'node', 'none', 'noon', 'norm', 'nose', 'note', 'null', 'open',
-    'oral', 'over', 'pace', 'pack', 'page', 'paid', 'pain', 'pair', 'palm', 'park', 'part',
-    'pass', 'past', 'path', 'pave', 'peak', 'peel', 'pelt', 'pick', 'pile', 'pill', 'pine',
-    'pink', 'pipe', 'plan', 'play', 'plot', 'plow', 'plug', 'plus', 'poem', 'poet', 'pole',
-    'poll', 'pond', 'pool', 'poor', 'port', 'pose', 'post', 'pour', 'pray', 'prep', 'prey',
-    'pull', 'pump', 'pure', 'push', 'quit', 'quiz', 'race', 'rack', 'rage', 'raid', 'rail',
-    'rain', 'rank', 'rape', 'rare', 'rash', 'rate', 'read', 'real', 'rear', 'rely', 'rent',
-    'rest', 'rice', 'rich', 'ride', 'ring', 'riot', 'rise', 'risk', 'road', 'rock', 'role',
-    'roll', 'roof', 'room', 'root', 'rope', 'rose', 'rude', 'rule', 'rush', 'rust', 'safe',
-    'sail', 'sake', 'sale', 'salt', 'same', 'sand', 'save', 'scan', 'seal', 'seat', 'seed',
-    'seek', 'self', 'sell', 'send', 'sent', 'ship', 'shop', 'shot', 'show', 'shut', 'sick',
-    'side', 'sign', 'silk', 'sing', 'sink', 'site', 'size', 'skin', 'skip', 'slim', 'slip',
-    'slow', 'snap', 'snow', 'soap', 'sock', 'soft', 'soil', 'sole', 'some', 'song', 'soon',
-    'sore', 'soul', 'soup', 'span', 'spin', 'spot', 'spur', 'stab', 'star', 'stay', 'stem',
-    'step', 'stir', 'stop', 'stub', 'such', 'suit', 'sure', 'surf', 'swap', 'swim', 'tail',
-    'tale', 'talk', 'tall', 'tape', 'task', 'team', 'tear', 'tell', 'tend', 'tent', 'term',
-    'test', 'text', 'than', 'that', 'them', 'then', 'they', 'thin', 'this', 'thus', 'tide',
-    'till', 'time', 'tire', 'toad', 'told', 'toll', 'tomb', 'tone', 'took', 'tool', 'tops',
-    'torn', 'tour', 'town', 'trap', 'tree', 'trim', 'trio', 'trip', 'true', 'tube', 'tune',
-    'turn', 'type', 'unit', 'upon', 'user', 'vast', 'verb', 'very', 'view', 'vine', 'visa',
-    'void', 'volt', 'vote', 'wade', 'wage', 'wait', 'wake', 'walk', 'wall', 'want', 'ward',
-    'warm', 'warn', 'wary', 'wash', 'wave', 'weak', 'wear', 'weed', 'week', 'well', 'went',
-    'were', 'west', 'what', 'when', 'whom', 'wide', 'wife', 'wild', 'will', 'wind', 'wine',
-    'wing', 'wire', 'wish', 'with', 'wolf', 'wood', 'word', 'wore', 'work', 'worn', 'wrap',
-    'yard', 'year', 'your', 'zero', 'zone'];
-  fallback.forEach(w => DICTIONARY.add(w));
-}
+// ── Word list ───────────────────────────────────────────────────
+const rawDictionary = fs.readFileSync(path.join(__dirname, 'words.txt'), 'utf8');
+const DICTIONARY = new Set();
+rawDictionary.split('\n').forEach(word => {
+  const normalizedWord = word.trim().toLowerCase();
+  if (normalizedWord.length >= 3) DICTIONARY.add(normalizedWord);
+});
+console.log(`Dictionary loaded: ${DICTIONARY.size} words`);
 
 // ── Helpers ──────────────────────────────────────────────────────
 function generateRoomId() {
