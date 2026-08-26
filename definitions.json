@@ -177,7 +177,6 @@
     "Misuse; improper use; perversion.",
     "Coarse, insulting speech; abusive language; language that unjustly or angrily vilifies.",
     "Physical maltreatment; injury; cruel treatment.",
-    "Violation; defilement; rape; forcing of undesired sexual activity by one person on another, often on a repeated basis.",
     "To put to a wrong use; to misapply; to use improperly; to use for a wrong purpose or end; to pervert",
     "To injure; to maltreat; to hurt; to treat with cruelty, especially repeatedly.",
     "To attack with coarse language; to insult; to revile; malign; to speak in an offensive manner to or about someone; to disparage.",
@@ -1285,7 +1284,6 @@
   ],
   "anal": [
     "Of, related to, intended for or involving the anus.",
-    "Of the stage in psychosexual development when the child's interest is alleged to be concentrated on the anal region.",
     "Of a vein, proximate to the thorax.",
     "Any of the anal scales of a reptile."
   ],
@@ -3144,9 +3142,7 @@
     "A lewd person."
   ],
   "bawdy": [
-    "Obscene; filthy; unchaste.",
-    "Sexual in nature and usually meant to be humorous but considered rude; ribald.",
-    "A bawdy or lewd person."
+    "Obscene; filthy; unchaste."
   ],
   "bawl": [
     "To shout or utter in a loud and intense manner.",
@@ -8004,7 +8000,6 @@
   ],
   "cheat": [
     "To violate rules in order to gain, or attempt to gain, advantage from a situation.",
-    "To be unfaithful to one's spouse or partner; to commit adultery, or to engage in sexual or romantic conduct with a person other than one's partner in contravention of the rules of society or agreement in the relationship.",
     "To avoid a seemingly inevitable thing.",
     "To deceive; to fool; to trick.",
     "An act of deception or fraud; that which is the means of fraud or deception.",
@@ -8588,8 +8583,7 @@
     "Having two mutations on two genes on the same chromosome of a homologous pair.",
     "Of the side of the Golgi apparatus nearer to the endoplasmic reticulum.",
     "In (or constituting, forming, or describing) a double bond in which the greater radical on both ends is on the same side of the bond.",
-    "In (or constituting, forming, or describing) a coordination compound in which the two instances of a particular ligand are adjacent to each other.",
-    "Cisgender (or sometimes cissexual): not trans (transgender or transsexual) nor non-binary."
+    "In (or constituting, forming, or describing) a coordination compound in which the two instances of a particular ligand are adjacent to each other."
   ],
   "cisco": [
     "Any North American freshwater fish of certain species of the genus Coregonus that live in cold-water lakes."
@@ -11192,7 +11186,6 @@
   "cute": [
     "Possessing physical features, behaviors, personality traits or other properties that are mainly attributed to infants and small or cuddly animals; e.g. fair, dainty, round, and soft physical features, disproportionately large eyes and head, playfulness, fragility, helplessness, curiosity or shyness, innocence, affectionate behavior.",
     "Lovable, charming, attractive or pleasing, especially in a youthful, dainty, quaint or fun-spirited way.",
-    "Sexually attractive or pleasing; gorgeous.",
     "Affected or contrived to charm; mincingly clever; precious; cutesy.",
     "Mentally keen or discerning (See also acute)",
     "Evincing cleverness; surprising in its elegance or unconventionality (but of limited importance)."
@@ -11367,7 +11360,6 @@
   ],
   "dally": [
     "To waste time in trivial activities, or in idleness; to trifle.",
-    "To caress, especially of a sexual nature; to fondle or pet",
     "To delay unnecessarily; to while away.",
     "Several wraps of rope around the saddle horn, used to stop animals in roping.",
     "To wind the lasso rope (ie throw-rope) around the saddle horn (the saddle horn is attached to the pommel of a western style saddle) after the roping of an animal"
@@ -12306,14 +12298,6 @@
     "Dijon mustard, a prepared mustard containing white wine in place of vinegar",
     "A dark yellow"
   ],
-  "dike": [
-    "US standard spelling of dyke."
-  ],
-  "dildo": [
-    "A device used for sexual penetration or another sexual activity.",
-    "A columnar cactus of the West Indies (Pilosocereus royenii).",
-    "To penetrate with a dildo or with another object as if it were a dildo."
-  ],
   "dill": [
     "Anethum graveolens (the type species of the genus Anethum), a herb, the seeds of which are moderately warming, pungent, and aromatic, formerly used as a soothing medicine for children; also known as dillseed.",
     "A cucumber pickled with dill flavoring.",
@@ -12452,7 +12436,6 @@
   "dirty": [
     "Unclean; covered with or containing unpleasant substances such as dirt or grime.",
     "That makes one unclean; corrupting, infecting.",
-    "Morally unclean; obscene or indecent, especially sexually.",
     "Dishonorable; violating accepted standards or rules.",
     "Corrupt, illegal, or improper.",
     "Out of tune.",
@@ -12676,7 +12659,6 @@
     "To pursue with the intent to catch.",
     "To follow in an annoying or harassing way.",
     "To fasten a hatch securely.",
-    "To watch, or participate, in sexual activity in a public place.",
     "To intentionally restrict one's productivity as employee; to work at the slowest rate that goes unpunished.",
     "To divide (a watch) with a comrade."
   ],
@@ -14280,7 +14262,6 @@
     "The border or part adjacent to the line of division; the beginning or early part (of a period of time)",
     "A shot where the ball comes off the edge of the bat, often unintentionally.",
     "A connected pair of vertices in a graph.",
-    "A level of sexual arousal that is maintained just short of reaching the point of inevitability, or climax.",
     "The point of data production in an organization (the focus of edge computing), as opposed to the cloud.",
     "To move an object slowly and carefully in a particular direction.",
     "To move slowly and carefully in a particular direction.",
@@ -14693,8 +14674,7 @@
   "enjoy": [
     "To receive pleasure or satisfaction from something.",
     "To have the use or benefit of something.",
-    "To be satisfied or receive pleasure; to have fun.",
-    "To have sexual intercourse with."
+    "To be satisfied or receive pleasure; to have fun."
   ],
   "ennui": [
     "A gripping listlessness or melancholia caused by boredom; depression.",
@@ -14870,10 +14850,7 @@
   ],
   "eros": [
     "A winged figure of a child representing love or its power.",
-    "Physical love; sexual desire.",
-    "a type of love that seeks fulfillment without violation or something else.",
-    "libido",
-    "collective instincts for self-preservation; life drive."
+    "a type of love that seeks fulfillment without violation or something else."
   ],
   "err": [
     "To make a mistake.",
@@ -16840,7 +16817,6 @@
     "An act of throwing, often violently.",
     "An act of moving the limbs or body with violent movements, especially in a dance.",
     "An act or period of unrestrained indulgence, enthusiasm, or both.",
-    "A short romantic, oftentimes sexual, relationship.",
     "An attempt, a try.",
     "A lively Scottish country dance.",
     "A party, especially a dance party.",
@@ -16880,7 +16856,6 @@
     "To throw (something) with a jerk or sudden movement; to fling.",
     "To dart about; to move with quick, jerky motions.",
     "To blurt out.",
-    "To play at courtship; to talk with teasing affection, to insinuate sexual attraction in a playful (especially conversational) way.",
     "To experiment, or tentatively engage, with; to become involved in passing with.",
     "Flirtatious."
   ],
@@ -17955,11 +17930,7 @@
     "To become stronger.",
     "To rebore the barrel of a rifle or shotgun.",
     "To update.",
-    "To freshen up.",
-    "To renew.",
-    "Of a dairy cow, to give birth to a calf.",
-    "Rude, cheeky, or inappropriate; presumptuous; disrespectful; forward.",
-    "Sexually aggressive or forward; prone to caress too eagerly; overly flirtatious."
+    "To freshen up."
   ],
   "fret": [
     "To chafe or irritate; to worry.",
@@ -18652,7 +18623,6 @@
     "To stare in wonder.",
     "To open wide; to display a gap.",
     "To open the passage to the vomeronasal organ, analogous to the flehming in other animals.",
-    "To depict a dilated anal or vaginal cavity upon penetrative sexual activity.",
     "An act of gaping; a yawn.",
     "A large opening.",
     "A disease in poultry caused by gapeworm in the windpipe, a symptom of which is frequent gaping.",
@@ -18830,14 +18800,6 @@
     "To stare stupidly or rudely; to gawk.",
     "A stupefied or amazed stare."
   ],
-  "gay": [
-    "Homosexual:",
-    "Upright or curved over the back.",
-    "A homosexual, especially a male homosexual.",
-    "To cause (something, e.g. AIDS) to be associated with homosexual people.",
-    "Considerably, very.",
-    "The letter —, which stands for the sound /ɡ/, in Pitman shorthand."
-  ],
   "gayle": [
     "Puerperal septicemia in sheep.",
     "A skin lesion, accompanied by swelling, occurring in those who have handled the bodies of sheep that have died from gayle."
@@ -18892,7 +18854,6 @@
   ],
   "geld": [
     "To castrate a male (usually an animal).",
-    "To suppress or severely reduce sexual desire or libido.",
     "To deprive of anything essential; to weaken.",
     "A female animal, such as a ewe or cow, that is not pregnant."
   ],
@@ -20191,41 +20152,7 @@
     "To obscure a corporate logo that has not been permitted for use in a production."
   ],
   "green": [
-    "The color of grass and leaves; a primary additive color midway between yellow and blue which is evoked by light between roughly 495–570 nm.",
-    "A member of a green party; an environmentalist.",
-    "A putting green, the part of a golf course near the hole.",
-    "The surface upon which bowls is played.",
-    "One of the color balls used in snooker, with a value of 3 points.",
-    "A public patch of land in the middle of a settlement.",
-    "A grassy plain; a piece of ground covered with verdant herbage.",
-    "Fresh leaves or branches of trees or other plants; wreaths.",
-    "Any substance or pigment of a green color.",
-    "A green light used as a signal.",
-    "One of the three color charges for quarks.",
-    "Of a green hue.",
-    "Sickly, unwell.",
-    "Unripe, said of certain fruits that change color when they ripen.",
-    "Inexperienced.",
-    "Islamist.",
-    "Full of life and vigour; fresh and vigorous; new; recent; young.",
-    "Naive or unaware of obvious facts.",
-    "Overcome with envy.",
-    "Environmentally friendly.",
-    "Of a green party, environmentalism-oriented.",
-    "Describing a pitch which, even if there is no visible grass, still contains a significant amount of moisture.",
-    "Of freshly cut wood or lumber that has not been dried: containing moisture and therefore relatively more flexible or springy.",
-    "High or too high in acidity.",
-    "Having a color charge of green.",
-    "Being or relating to the green currencies of the European Union.",
-    "Subject to or involving a model of open access in which a published article is only available to read for free after an embargo period.",
-    "Of or pertaining to a part formed from compacted metal powder which has not yet undergone sintering to improve its strength.",
-    "Having a status (as correct, ready, or safe) denoted or coded by the color green.",
-    "To make or turn (something) green or greener.",
-    "To become or grow green in color.",
-    "To add greenspaces to (a town, etc.).",
-    "To become environmentally aware.",
-    "To make (something) environmentally friendly.",
-    "Used to indicate that the speaker wishes to commence (or to continue a previously stopped) sexual activity."
+    "The color of grass and leaves; a primary additive color midway between yellow and blue which is evoked by light between roughly 495–570 nm."
   ],
   "greet": [
     "To welcome in a friendly manner, either in person or through another means such as writing.",
@@ -20403,21 +20330,11 @@
   ],
   "groom": [
     "A man who is about to marry.",
-    "A person who looks after horses.",
-    "One of several officers of the English royal household, chiefly in the lord chamberlain's department.",
     "A brushing or cleaning, as of a dog or horse.",
-    "To attend to one's appearance and clothing.",
-    "To care for (horses or other animals) by brushing and cleaning them.",
-    "To prepare (someone) for an event",
-    "To prepare (someone) for election or appointment.",
-    "To gain, or attempt to gain, the trust of a child or vulnerable person in order to take advantage of or exploit them, especially sexually (if under the age of consent).",
-    "In agile software development, to review and prioritize the items in the development backlog.",
-    "To prepare (a ski slope) for skiers by packing down the snow."
+    "To attend to one's appearance and clothing."
   ],
   "grope": [
-    "To search or attempt to find something in the dark, or, as a blind person, by feeling; to move about hesitatingly, as in darkness or obscurity; to feel one's way, as with the hands, when one can not see.",
-    "To touch (another person) closely and (especially) sexually.",
-    "To intentionally and inappropriately touch or rub against another person, in such a manner as to make the contact appear accidental, for the purpose of one's sexual gratification."
+    "To search or attempt to find something in the dark, or, as a blind person, by feeling; to move about hesitatingly, as in darkness or obscurity; to feel one's way, as with the hands, when one can not see."
   ],
   "gross": [
     "remarkably great, big, vast in an often unpleasant way; (of behaviour) Highly or conspicuously offensive.",
@@ -21408,37 +21325,7 @@
   ],
   "have": [
     "To possess, own.",
-    "To hold, as something at someone's disposal.",
-    "To include as a part, ingredient, or feature.",
-    "Used to state the existence or presence of someone in a specified relationship with the subject.",
-    "To consume or use up (a particular substance or resource, especially food or drink).",
-    "To undertake or perform (an action or activity).",
-    "To be scheduled to attend, undertake or participate in.",
-    "To experience, go through, undergo.",
-    "To be afflicted with, suffer from.",
-    "Used in forming the perfect aspect.",
-    "Used as an interrogative verb before a pronoun to form a tag question, echoing a previous use of 'have' as an auxiliary verb or, in certain cases, main verb. (For further discussion, see the appendix English tag questions.)",
-    "See have to.",
-    "To give birth to.",
-    "To engage in sexual intercourse with.",
-    "To accept as a romantic partner.",
-    "To cause to, by a command, request or invitation.",
-    "To cause to be.",
-    "To be affected by an occurrence. (Used in supplying a topic that is a small clause.)",
-    "To depict as being.",
-    "To be able to speak (a language).",
-    "To feel or be (especially painfully) aware of.",
-    "To allow; to tolerate.",
-    "To believe, buy, be taken in by.",
-    "To host someone; to take in as a guest.",
-    "To get a reading, measurement, or result from an instrument or calculation.",
-    "To consider a court proceeding that has been completed; to begin deliberations on a case.",
-    "To make an observation of (a bird species).",
-    "To capture or actively hold someone's attention or interest.",
-    "To grasp the meaning of; comprehend.",
-    "To be (an age).",
-    "A wealthy or privileged person.",
-    "One who has some (contextually specified) thing."
+    "To hold, as something at someone's disposal."
   ],
   "haven": [
     "A safe place.",
@@ -21636,22 +21523,7 @@
   "heat": [
     "Thermal energy.",
     "The condition or quality of being hot.",
-    "An attribute of a spice that causes a burning sensation in the mouth.",
-    "A period of intensity, particularly of emotion.",
-    "An undesirable amount of attention.",
-    "A fastball.",
-    "A condition in which a mammal is aroused sexually or where it is especially fertile and therefore eager to mate.",
-    "A preliminary race, used to determine the participants in a final race.",
-    "A stage in a competition, not necessarily a sporting one; a round.",
-    "One cycle of bringing metal to maximum temperature and working it until it is too cool to work further.",
-    "A hot spell.",
-    "Heating system; a system that raises the temperature of a room or building.",
-    "The output of a heating system.",
-    "A violent action unintermitted; a single effort.",
-    "To cause an increase in temperature of (an object or space); to cause to become hot (often with \"up\").",
-    "To become hotter.",
-    "To excite or make hot by action or emotion; to make feverish.",
-    "To excite ardour in; to rouse to action; to excite to excess; to inflame, as the passions."
+    "An attribute of a spice that causes a burning sensation in the mouth."
   ],
   "heath": [
     "A tract of level uncultivated land with sandy soil and scrubby vegetation; heathland.",
@@ -21878,13 +21750,7 @@
     "Various products of this plant, including fibres and the drug cannabis."
   ],
   "hen": [
-    "A female chicken (Gallus gallus), especially a sexually mature one kept for her eggs.",
-    "A female of other bird species, particularly a sexually mature female fowl.",
-    "A female fish (especially a salmon or trout) or crustacean.",
-    "A woman.",
-    "The penis of a trans woman.",
-    "The hard clam (Mercenaria mercenaria), a bivalve shellfish.",
-    "Synonym of mother-hen."
+    "A female chicken"
   ],
   "hence": [
     "In the future from now.",
@@ -22098,10 +21964,7 @@
     "Abundant in hills; having many hills."
   ],
   "hilt": [
-    "The handle of a sword, consisting of grip, guard, and pommel, designed to facilitate use of the blade and afford protection to the hand.",
-    "The base of the penis.",
-    "To provide with a hilt.",
-    "To insert (a bodily extremity) as far as it can go into a sexual orifice so that it is impeded by the wider base to which it is attached (e.g. finger until palm, penis until pelvis)."
+    "The handle of a sword, consisting of grip, guard, and pommel, designed to facilitate use of the blade and afford protection to the hand."
   ],
   "hilum": [
     "The eye of a bean or other seed, or the center of that eye; the mark or scar at the point of attachment of an ovule or seed to its base or support.",
@@ -22123,18 +21986,7 @@
     "plural of hind"
   ],
   "hinge": [
-    "A jointed or flexible device that allows the pivoting of a door etc.",
-    "A naturally occurring joint resembling such hardware in form or action, as in the shell of a bivalve.",
-    "A stamp hinge, a folded and gummed paper rectangle for affixing postage stamps in an album.",
-    "A principle, or a point in time, on which subsequent reasonings or events depend.",
-    "The median of the upper or lower half of a batch, sample, or probability distribution.",
-    "One of the four cardinal points, east, west, north, or south.",
-    "A movement that presents itself as rotation when an off-centre fixed point is taken into account.",
-    "In polyamory, a person connected emotionally or sexually to two others who are not connected to each other.",
-    "To attach by, or equip with a hinge.",
-    "To depend on something.",
-    "The breaking off of the distal end of a knapped stone flake whose presumed course across the face of the stone core was truncated prematurely, leaving not a feathered distal end but instead the scar of a nearly perpendicular break.",
-    "To move or already be positioned in such a fashion that it presents itself as rotation when an off-centre fixed point is taken into account."
+    "A jointed or flexible device that allows the pivoting of a door etc."
   ],
   "hinny": [
     "The hybrid offspring of a stallion (male horse) and a she-ass (female donkey).",
@@ -22377,7 +22229,7 @@
     "Synonym of haiku (“type of Japanese poem”)."
   ],
   "hokum": [
-    "A genre of blues song or music, often characterized by sexual innuendos or satire."
+    "A genre of blues song or music"
   ],
   "hold": [
     "To grasp or grip.",
@@ -24603,7 +24455,7 @@
   ],
   "kama": [
     "A sickle-like weapon, originally used as a tool for cutting weeds.",
-    "The act or process of wishing; longing, desire (with or without sexual connotations); one of the goals of life in Hindu tradition."
+    "The act or process of wishing; longing, desire."
   ],
   "kame": [
     "A round hill or short ridge of sand or gravel deposited by a melting glacier."
@@ -25051,17 +24903,8 @@
     "Any of various structurally related polypeptides of the autacoid family, such as bradykinin and kallikrein, that act locally to induce vasodilation and contraction of smooth muscle."
   ],
   "kink": [
-    "To laugh loudly.",
-    "To gasp for breath as in a severe fit of coughing.",
     "A tight curl, twist, or bend in a length of thin material, hair etc.",
-    "A difficulty or flaw that is likely to impede operation, as in a plan or system.",
-    "An unreasonable notion; a crotchet; a whim; a caprice.",
-    "Peculiarity or deviation in sexual behaviour or taste.",
-    "A person with peculiar sexual tastes.",
-    "Any sexual preference outside normal or expected norms.",
-    "A positive 1-soliton solution to the sine-Gordon equation.",
-    "To form a kink or twist.",
-    "To be formed into a kink or twist."
+    "A difficulty or flaw that is likely to impede operation, as in a plan or system."
   ],
   "kinky": [
     "Full of kinks; liable to kink or curl.",
@@ -26062,17 +25905,7 @@
     "Of or relating to lava."
   ],
   "lave": [
-    "To bathe or wash (someone or something).",
-    "Of a river or other water body: to flow along or past (a place or thing); to wash.",
-    "Followed by into, on, or upon: to pour (water or some other liquid) with or as if with a ladle into or on someone or something; to lade, to ladle.",
-    "To remove (something), as if by washing away with water.",
-    "To surround or gently touch (someone or something), as if with water.",
-    "Chiefly in sexual contexts: to lick (someone or something).",
-    "To bathe or wash.",
-    "To surround as if with water.",
-    "Chiefly in sexual contexts; followed by at: to lick.",
-    "An act of bathing or washing; a bath or bathe, a wash.",
-    "That which is left over; a remainder, a remnant, the rest."
+    "To bathe or wash (someone or something)."
   ],
   "laver": [
     "A red alga/seaweed, Porphyra umbilicalis (syn. Porphyra laciniata), eaten as a vegetable.",
@@ -26432,10 +26265,7 @@
     "Any of several species of Allium, broadly resembling the domesticated plant in appearance in the wild."
   ],
   "leer": [
-    "To look sideways or obliquely; now especially with sexual desire or malicious intent.",
-    "To entice with a leer or leers.",
-    "A significant side glance; a glance expressive of some passion, as malignity, amorousness, etc.; a sly or lecherous look.",
-    "An arch or affected glance or cast of countenance."
+    "To look sideways or obliquely."
   ],
   "leery": [
     "Cautious, suspicious, wary, hesitant, or nervous about something; having reservations or concerns.",
@@ -26718,8 +26548,7 @@
     "Sickly-looking, pale, wan."
   ],
   "lewd": [
-    "Lascivious, sexually promiscuous, rude.",
-    "A sexually suggestive image, particularly one which does not involve full nudity."
+    "Lascivious, rude."
   ],
   "lewis": [
     "A cramp iron inserted into a cavity in order to lift heavy stones; used as a symbol of strength in Freemasonry.",
@@ -26824,22 +26653,7 @@
   "lie": [
     "To rest in a horizontal position on a surface.",
     "To be placed or situated.",
-    "To abide; to remain for a longer or shorter time; to be in a certain state or condition.",
-    "Used with in: to be or exist; to belong or pertain; to have an abiding place; to consist.",
-    "Used with with: to have sexual relations with.",
-    "Used with on/upon: to be incumbent (on); to be the responsibility of a person.",
-    "To be still or quiet, like one lying down to rest.",
-    "To be sustainable; to be capable of being maintained.",
-    "The terrain and conditions surrounding the ball before it is struck.",
-    "The terrain and conditions surrounding the disc before it is thrown.",
-    "The position of a fetus in the womb.",
-    "A manner of lying; relative position.",
-    "An animal's lair.",
-    "To give false information intentionally with intent to deceive.",
-    "To convey a false image or impression.",
-    "An intentionally false statement; an intentional falsehood.",
-    "A statement intended to deceive, even if literally true.",
-    "Anything that misleads or disappoints."
+    "To give false information intentionally with intent to deceive."
   ],
   "liege": [
     "A free and independent person; specifically, a lord paramount; a sovereign.",
@@ -28300,8 +28114,7 @@
     "To drink (liquor) to excess."
   ],
   "lust": [
-    "A feeling of strong desire, especially such a feeling driven by sexual arousal.",
-    "To look at or watch with a strong desire, especially of a sexual nature."
+    "A feeling of strong desire."
   ],
   "lusty": [
     "Exhibiting lust (in the obsolete sense meaning \"vigor\"); strong, healthy, robust; vigorous; full of sap or vitality.",
@@ -28567,43 +28380,7 @@
     "Used in a phrasal verb: major in."
   ],
   "make": [
-    "To create.",
-    "To tend; to contribute; to have effect; with for or against.",
-    "To constitute.",
-    "To add up to, have a sum of.",
-    "To interpret.",
-    "To bring into success.",
-    "To cause to be.",
-    "To cause to appear to be; to represent as.",
-    "To cause (to do something); to compel (to do something).",
-    "To force to do.",
-    "To indicate or suggest to be.",
-    "To cover neatly with bedclothes.",
-    "To cover (a given distance) by travelling.",
-    "To move at (a speed).",
-    "To appoint; to name.",
-    "To earn, to gain (money, points, membership or status).",
-    "To achieve coverage in; to appear in.",
-    "To pay, to cover (an expense); chiefly used after expressions of inability.",
-    "To enact; to establish.",
-    "To develop into; to prove to be.",
-    "To study or train so as to become (a profession); to grow up to be (something).",
-    "To form or formulate in the mind.",
-    "To perform a feat.",
-    "To gain sufficient audience to warrant its existence.",
-    "To have sexual intercourse with.",
-    "Of water, to flow toward land; to rise.",
-    "To establish two or more men on (a point) so that it cannot be captured.",
-    "Brand; marque; manufacturer; maker.",
-    "Manner or style of construction (style of how a thing is made).",
-    "Origin (of a manufactured article); manufacture; production.",
-    "A person's character or disposition.",
-    "Quantity produced, especially of materials.",
-    "A software utility for automatically building large applications, or an implementation of this utility.",
-    "A homemade project, particularly one demonstrated on television.",
-    "Turn to declare the trump for a hand (in bridge), or to shuffle the cards.",
-    "A made basket.",
-    "The closing of an electrical circuit."
+    "To create."
   ],
   "maker": [
     "Someone who makes; a person or thing that makes or produces something.",
@@ -28620,15 +28397,7 @@
     "The cheekbone, which forms a part of the lower edge of the orbit."
   ],
   "male": [
-    "Belonging to the sex which typically produces sperm, or to the gender which is typically associated with it.",
-    "Characteristic of this sex/gender. (Compare masculine, manly.)",
-    "Tending to lead to or regulate the development of sexual characteristics typical of this sex.",
-    "Masculine; of the masculine grammatical gender.",
-    "Having the F factor; able to impart DNA into another bacterium which does not have the F factor (a female).",
-    "Of instruments, tools, or connectors: designed to fit into or penetrate a female counterpart, as in a connector, pipe fitting or laboratory glassware.",
-    "One of the male (masculine) sex or gender.",
-    "A bacterium which has the F factor.",
-    "A male connector, pipe fitting, etc."
+    "Masculine; of the masculine grammatical gender."
   ],
   "mali": [
     "A member of a caste in South Asia whose traditional occupation is gardening; hence, any South Asian gardener.",
@@ -28922,12 +28691,6 @@
   ],
   "marua": [
     "A type of small-grained cereal from India, Eleusine coracana, similar to millet."
-  ],
-  "mary": [
-    "Alternative letter-case form of Mary (“male homosexual”)."
-  ],
-  "marys": [
-    "plural of mary"
   ],
   "mas": [
     "A country cottage or farmstead in Occitan-speaking territories.",
@@ -30236,17 +29999,9 @@
     "A hemorrhagic mass of tissue in the uterus caused by a dead ovum.",
     "Any of several spicy sauces typical of the cuisine of Mexico and neighboring Central America countries, especially one that contains chocolate and is used in cooking main dishes, not desserts."
   ],
-  "moll": [
-    "A female companion of a gangster or other criminal, especially a former or current prostitute.",
-    "A prostitute or woman with loose sexual morals."
-  ],
   "molly": [
-    "A woman or girl, especially of low status or prostitute.",
-    "A mollemoke.",
-    "A female cat, a she-cat (usually spayed)",
     "A bird, the wagtail.",
     "A molly bolt.",
-    "To engage in (male) homosexual activity with.",
     "A fish of the genus Poecilia, excluding Endler's livebearers and guppies."
   ],
   "moly": [
@@ -30527,8 +30282,7 @@
     "A tiny computer for remote sensing; a component element of smartdust."
   ],
   "motel": [
-    "A type of hotel or lodging establishment, often located near a major highway, which typically features a series of rooms whose entrances are immediately adjacent to a parking lot to facilitate convenient access to parked automobiles.",
-    "A low-cost short-stay hotel, often with hourly rates rather than daily rates, and notorious for permitting illicit sexual activities; a love hotel."
+    "A type of hotel or lodging establishment, often located near a major highway, which typically features a series of rooms whose entrances are immediately adjacent to a parking lot to facilitate convenient access to parked automobiles."
   ],
   "motes": [
     "plural of mote"
@@ -30611,27 +30365,8 @@
   ],
   "mount": [
     "A hill or mountain.",
-    "Any of seven fleshy prominences in the palm of the hand, taken to represent the influences of various heavenly bodies.",
-    "A green hillock in the base of a shield.",
     "An animal, usually a horse, used to ride on.",
-    "A car, bicycle, or motorcycle used for racing.",
-    "A mounting; an object on which another object is mounted.",
-    "A step or block to assist in mounting a horse.",
-    "A signal for mounting a horse.",
-    "A dominant ground grappling position, where one combatant sits on the other combatants torso with the face pointing towards the opponent's head.",
-    "The act of getting onto the apparatus.",
-    "To get upon; to ascend; to climb.",
-    "To place oneself on (a horse, a bicycle, etc.); to bestride.",
-    "To cause to mount; to put on horseback; to furnish with animals for riding.",
-    "To sit on a combatant's torso with the face pointing towards the opponent's head; to assume the mount position in ground grappling.",
-    "To attach (an object) to a support, backing, framework etc.",
-    "To attach (a drive or device) to the file system in order to make it available to the operating system.",
-    "To increase in quantity or intensity.",
-    "To get on top of (another) for the purpose of copulation.",
-    "To have or begin sexual intercourse with someone.",
-    "To begin (a campaign, military assault, etc.); to launch.",
-    "To prepare and arrange the scenery, furniture, etc. for use in (a play or production).",
-    "To incorporate fat, especially butter, into (a dish, especially a sauce to finish it)."
+    "To get upon; to ascend; to climb."
   ],
   "mourn": [
     "To express sadness or sorrow for; to grieve over (especially a death).",
@@ -31109,9 +30844,6 @@
   ],
   "naevi": [
     "plural of naevus"
-  ],
-  "naff": [
-    "Heterosexual."
   ],
   "nag": [
     "A small horse; a pony.",
@@ -32149,19 +31881,7 @@
   ],
   "nurse": [
     "A person involved in providing direct care for the sick:",
-    "One who, or that which, brings up, rears, causes to grow, trains, or fosters.",
-    "A shrub or tree that protects a young plant.",
-    "A lieutenant or first officer who takes command when the captain is unfit for his place.",
-    "A larva of certain trematodes, which produces cercariae by asexual reproduction.",
-    "To breastfeed: to feed (a baby) at the breast; to suckle.",
-    "To breastfeed: to be fed at the breast.",
-    "To care for (someone), especially in sickness; to tend to.",
-    "To tend gently and with extra care.",
-    "To manage or oversee (something) with care and economy.",
-    "To cultivate or persistently entertain (an attitude, usually negative) in one's mind; to brood or obsess over.",
-    "To hold closely to one's chest.",
-    "To strike (billiard balls) gently, so as to keep them in good position during a series of shots.",
-    "A nurse shark or dogfish."
+    "One who, or that which, brings up, rears, causes to grow, trains, or fosters."
   ],
   "nut": [
     "Any of various hard-shelled seeds or hard, dry fruits from various families of plants.",
@@ -32840,11 +32560,6 @@
     "A musical instrument that has multiple pipes which play when a key is pressed (the pipe organ), or an electronic instrument designed to replicate such.",
     "An official magazine, newsletter, or similar publication of an organization.",
     "A government organization; agency; authority."
-  ],
-  "orgy": [
-    "A secret rite or ceremony, typically involving riotous and dissolute behavior, including dancing, drunkenness and indiscriminate sexual activity, undertaken in honor of various pagan gods or goddesses (such as Attis, Bacchus, Ceres, Dionysus, Osiris, etc).",
-    "A gathering of people to engage in group sex.",
-    "An instance or period of excessive indulgence in a specified activity; spree."
   ],
   "oribi": [
     "Ourebia ourebi, a species of antelope."
@@ -33912,10 +33627,7 @@
     "A road paving machine, a machine to lay asphalt on roads."
   ],
   "paw": [
-    "The soft foot of a mammal or other animal, generally a quadruped, that has claws or nails; comparable to a human hand or foot.",
-    "Of an animal, to touch (something) with a paw.",
-    "To touch (someone) in a sexual way.",
-    "To clumsily dig (through something)."
+    "The soft foot of a mammal or other animal, generally a quadruped, that has claws or nails; comparable to a human hand or foot."
   ],
   "pawky": [
     "Shrewd, sly; often also characterised by a sarcastic sense of humour."
@@ -34239,8 +33951,7 @@
     "oil cake"
   ],
   "penis": [
-    "The male erectile reproductive organ used for sexual intercourse that in the human male and other placental mammals is also used for urination; the tubular portion of the external male genitalia (excluding the scrotum).",
-    "A similar erectile sexual organ present in the cloacas of male amniotes."
+    "The organ on the body of a man or male animal that is used for urinating and sex."
   ],
   "penne": [
     "A type of short, diagonally cut pasta."
@@ -34410,20 +34121,7 @@
   ],
   "phase": [
     "A distinguishable part of a sequence or cycle occurring over time.",
-    "That which is exhibited to the eye; the appearance which anything manifests, especially any one among different and varying appearances of the same object.",
-    "Any appearance or aspect of an object of mental apprehension or view.",
-    "A particular appearance or state in a regularly recurring cycle of changes with respect to quantity of illumination or form, or the absence, of a body's illuminated disk. Illustrated in Wikipedia's article Lunar phase.",
-    "Any one point or portion in a recurring series of changes, as in the changes of motion of one of the particles constituting a wave or vibration; one portion of a series of such changes, in distinction from a contrasted portion, as the portion on one side of a position of equilibrium, in contrast with that on the opposite side.",
-    "A component in a material system that is distinguished by chemical composition and/or physical state (solid, liquid or gas) and/or crystal structure. It is delineated from an adjoining phase by an abrupt change in one or more of those conditions.",
-    "In certain organisms, one of two or more colour variations characteristic of the species, but independent of the ordinary seasonal and sexual differences, and often also of age.",
-    "The period of play between consecutive breakdowns.",
-    "A haplotype.",
-    "The counterclockwise angle from the positive half of the real number line to the vector pointing to a complex number on an Argand diagram of the complex plane, which has the positive real line pointing right and the positive imaginary number line pointing up.",
-    "A distortion caused by a difference in the speed of propagation for different frequencies",
-    "In a polyphase electrical power system, one of the power-carrying conductors, or the alternating current carried by it.",
-    "To begin—if construed with \"in\"—or to discontinue—if construed with out—(doing) something over a period of time (i.e. in phases).",
-    "To pass into or through a solid object.",
-    "To use a phaser."
+    "To pass into or through a solid object."
   ],
   "phat": [
     "An English trick-taking partnership card game descended from the game of all fours."
@@ -35814,33 +35512,7 @@
   ],
   "pop": [
     "A loud, sharp sound, as of a cork coming out of a bottle, especially when the contents are pressurized by fizziness.",
-    "An effervescent or fizzy drink, most frequently nonalcoholic; soda pop.",
-    "A bottle, can, or serving of effervescent or fizzy drink, most frequently nonalcoholic; a soda pop.",
-    "A pop shot: a quick, possibly unaimed, shot with a firearm.",
-    "Something that stands out or is distinctive to the mind or senses.",
-    "The removal of a data item from the top of a stack.",
-    "A bird, the European redwing.",
-    "The sixth derivative of the position vector with respect to time (after velocity, acceleration, jerk, jounce, crackle), i.e. the rate of change of crackle.",
-    "A small, immature peanut, boiled as a snack.",
-    "The pulling of a string away from the fretboard and releasing it so that it snaps back.",
-    "To make a pop, or sharp, quick sound.",
-    "To burst (something) with a popping sound.",
-    "To broach or open (something) in a way that is instantaneous or sudden and that often (literally or notionally) involves a popping sound; to remove (the closure, the lid or top) from something so as to open it in this manner.",
-    "To enter, or issue forth, with a quick, sudden movement; to move from place to place suddenly; to dart.",
-    "To place (something) (somewhere); to move or position (something) with a short movement.",
-    "To make a short trip or visit.",
-    "To stand out; to be distinctive to the senses.",
-    "To hit (something or someone).",
-    "To remove (a data item) from the top of a stack.",
-    "To sexually penetrate.",
-    "To undergo equalization of pressure when the Eustachian tubes open.",
-    "To perform the popping style of dance.",
-    "To pull a string away from the fretboard and release it so that it snaps back.",
-    "A loud, sharp sound, as of a cork coming out of a bottle.",
-    "Popular.",
-    "Pop music.",
-    "Population.",
-    "A Russian Orthodox parish priest."
+    "An effervescent or fizzy drink, most frequently nonalcoholic; soda pop."
   ],
   "pope": [
     "An honorary title of the Roman Catholic bishop of Rome as father and head of his church, a sovereign of the Vatican city state.",
@@ -36539,8 +36211,7 @@
     "To function as a server for a client device, but pass on the requests to another server for service."
   ],
   "prude": [
-    "A person who is or tries to be excessively proper, especially one who is easily offended by matters of a sexual nature.",
-    "Prudish."
+    "A person who is or tries to be excessively proper."
   ],
   "prune": [
     "The dried, wrinkled fruit of certain species of plum.",
@@ -36811,7 +36482,6 @@
     "Any of various riodinid butterflies of the genus Dodona of Asia."
   ],
   "punk": [
-    "One who engages in sexual intercourse",
     "A group of associated musical, artistic and social movements emerging out of the counterculture in the 1970s:",
     "A follower of any of these movements, including:",
     "Of or concerning punk rock or its associated subculture.",
@@ -36869,7 +36539,7 @@
     "The central dark part of an ocellated spot."
   ],
   "puppy": [
-    "A young dog, especially before sexual maturity (12–18 months).",
+    "A young dog.",
     "A young rat.",
     "A young seal.",
     "A dog with a youthful appearance, or any dog.",
@@ -37196,12 +36866,6 @@
     "To promote a pawn to a queen.",
     "To be the queen bee of a colony.",
     "To provide with a new queen bee."
-  ],
-  "queer": [
-    "Pertaining to sexual or gender behaviour or identity which does not conform to conventional heterosexual or cisgender norms, assumptions etc.",
-    "To reevaluate or reinterpret (a work) with an eye to sexual orientation and/or to gender, as by applying queer theory.",
-    "Queerly.",
-    "Very, extremely."
   ],
   "quell": [
     "To subdue, put down, or silence (someone or something); to force (someone) to submit.",
@@ -37855,14 +37519,7 @@
     "to rappel"
   ],
   "rape": [
-    "The act of forcing sex upon another person without their consent or against their will; originally coitus forced by a man on a woman, but now generally any sex act forced by any person upon another person, regardless of gender; by extension, any non-consensual sex act forced on or perpetrated by any being.",
-    "To force sexual intercourse or other sexual activity upon (someone) without their consent.",
-    "To seize by force. (Now often with sexual overtones.)",
-    "To carry (someone, especially a woman) off against their will, especially for sex; to abduct.",
-    "To plunder, to destroy or despoil.",
-    "Synonym of rapeseed, Brassica napus.",
-    "The stalks and husks of grapes from which the must has been expressed in winemaking.",
-    "A filter containing the stalks and husks of grapes, used for clarifying wine, vinegar, etc."
+    "The act of forcing sex upon another person without their consent or against their will; originally coitus forced by a man on a woman, but now generally any sex act forced by any person upon another person, regardless of gender; by extension, any non-consensual sex act forced on or perpetrated by any being."
   ],
   "rapid": [
     "Very swift or quick.",
@@ -38007,17 +37664,7 @@
   "raw": [
     "(of food) Not cooked.",
     "Not treated or processed; in a natural state, unrefined, unprocessed. (of materials, products, etc.)",
-    "Having had the skin removed or abraded; chafed, tender; exposed, lacerated.",
-    "New or inexperienced.",
-    "Crude in quality; rough, uneven, unsophisticated.",
-    "Uncorrected, without analysis.",
-    "Unpleasantly cold or damp. (of weather)",
-    "Unmasked, undisguised, strongly expressed. (of an emotion, personality, etc.)",
-    "Candid in a representation of unpleasant facts, conditions, etc.",
-    "Unrefined, crude, or insensitive, especially with reference to sexual matters. (of language)",
-    "An unprocessed sugar; a batch of such.",
-    "A galled place; an inveterate sore.",
-    "A point about which a person is particularly sensitive."
+    "Having had the skin removed or abraded; chafed, tender; exposed, lacerated."
   ],
   "ray": [
     "A beam of light or radiation.",
@@ -38226,21 +37873,7 @@
     "Often in the form recurring following a number: of a numeral or group of numerals in a decimal fraction: to repeat indefinitely."
   ],
   "red": [
-    "The colour of the setting sun, blood, and strawberries; the colour which is evoked by the longest visible wavelengths (between about 625–740 nm), and a primary additive colour.",
-    "A revolutionary socialist or (most commonly) a Communist; (usually capitalized) a Bolshevik, a supporter of the Bolsheviks in the Russian Civil War.",
-    "One of the 15 red balls used in snooker, distinguished from the colours.",
-    "Red wine.",
-    "Any of several varieties of ale which are brewed with red or kilned malt, giving the beer a red colour.",
-    "One of the three color charges for quarks.",
-    "Of a red hue.",
-    "Having an orange-brown or orange-blond colour; ginger.",
-    "Having a redder hue than usual due to embarrassment, anger, sunburn, etc.; flushed.",
-    "Having a brown color.",
-    "Of the hearts or diamonds suits. Compare black (“of the spades or clubs suits”)",
-    "Supportive of, related to, or dominated by a political party or movement represented by the color red:",
-    "Of the lower-frequency region of the (typically visible) part of the electromagnetic spectrum which is relevant in the specific observation.",
-    "Of a red color charge.",
-    "Used to indicate that the speaker wishes current sexual activity to stop immediately."
+    "The colour of the setting sun, blood, and strawberries; the colour which is evoked by the longest visible wavelengths (between about 625–740 nm), and a primary additive colour."
   ],
   "redan": [
     "A defensive fortification work in the shape of a V."
@@ -39396,12 +39029,6 @@
   ],
   "romp": [
     "To play about roughly, energetically or boisterously.",
-    "(Often used with down) To press forcefully, to encourage vehemently, to oppress.",
-    "To make progress or win easily.",
-    "To move with little effort relatively quickly.",
-    "A period of boisterous play, a frolic; now especially, a bout of sexual activity, especially when illicit.",
-    "An enjoyable, fast-paced but essentially inconsequential film, play, or other piece of entertainment.",
-    "A decisive victory; a game, match etc. which is won easily.",
     "A group of otters."
   ],
   "rondo": [
@@ -40146,22 +39773,14 @@
     "Discolored and rancid; reasty."
   ],
   "rut": [
-    "Sexual desire in any of many mammals, often specific to mating season; the state or season in which this is experienced.",
-    "The noise made by deer during sexual excitement.",
-    "Roaring, as of waves breaking upon the shore; rote.",
-    "To be in the annual rut or mating season.",
-    "To have sexual intercourse.",
     "A furrow, groove, or track worn in the ground, as from the passage of many wheels along a road.",
-    "A fixed routine, procedure, line of conduct, thought or feeling.",
-    "A dull routine.",
-    "To make a furrow."
+    "A fixed routine, procedure, line of conduct, thought or feeling."
   ],
   "rute": [
     "A bundle of thin sticks, typically made of wood, sometimes bound in such a way that the binding can be moved so that it varies the tightness of the binding."
   ],
   "rutty": [
-    "Imprinted with ruts.",
-    "Related to a rut; being in a state of sexual arousal."
+    "Imprinted with ruts."
   ],
   "rye": [
     "A grain used extensively in Europe for making bread, beer, and (now generally) for animal fodder.",
@@ -40603,10 +40222,7 @@
     "A waterfall; a rapid."
   ],
   "sauna": [
-    "A room or a house designed for heat sessions.",
-    "The act of using a sauna.",
-    "In some countries, a business with bath-like facilities that is actually a brothel or a place for (non-commercial) sexual encounters; a bathhouse or massage parlour.",
-    "To use a sauna."
+    "A room or a house designed for heat sessions."
   ],
   "saury": [
     "A marine epipelagic fish of the family Scomberesocidae, with beaklike jaws and a row of small finlets behind the dorsal and anal fins."
@@ -41676,24 +41292,13 @@
     "past participle of sew"
   ],
   "sex": [
-    "A category into which sexually-reproducing organisms are divided on the basis of their reproductive roles in their species; the system of such categories, which can differ by organism or by taxonomic branch.",
-    "Another category, especially of humans and especially based on sexuality or gender roles.",
-    "The members of such a category, taken collectively.",
-    "The distinction and relation between these categories, especially in humans; gender.",
-    "Sexual activity, may be understood to be sexual intercourse unless preceded by a modifier.",
-    "To determine the sex of (an animal)."
+    "A category into which sexually-reproducing organisms are divided on the basis of their reproductive roles in their species; the system of such categories, which can differ by organism or by taxonomic branch."
   ],
   "sexed": [
     "Having a sex; being male or female.",
     "Having had its sex determined; having undergone sexing.",
     "Having a quantifiable libido or particular sex drive.",
     "simple past and past participle of sex"
-  ],
-  "sext": [
-    "The service appointed for this hour.",
-    "A sixth: an interval of six diatonic degrees.",
-    "An electronic message, especially one sent by cell phone, involving sexual language or images.",
-    "To send a sext."
   ],
   "sexto": [
     "A book consisting of sheets each of which is folded into six leaves."
@@ -41925,14 +41530,7 @@
   ],
   "shark": [
     "Any predatory fish of the superorder Selachimorpha, with a cartilaginous skeleton and 5 to 7 gill slits on each side of its head.",
-    "Meat of this animal, consumed as food.",
-    "Any fish of the class Chondrichthyes, especially an extinct shark-like holocephalian.",
-    "A freshwater fish that resembles a true shark (Selachimorpha) in appearance or movement; a freshwater shark.",
-    "A noctuid moth of species Cucullia umbratica.",
-    "A university student who is not a fresher that has engaged in sexual activity with a fresher; usually habitually and with multiple people.",
-    "Someone who exploits others, for example by trickery, lies, usury, extortion.",
-    "A person that excels in a particular field.",
-    "A person who feigns ineptitude to win money from others."
+    "Any fish of the class Chondrichthyes, especially an extinct shark-like holocephalian."
   ],
   "sharp": [
     "Terminating in a point or edge, especially one that can cut or pierce easily; not dull, obtuse, or rounded.",
@@ -42631,30 +42229,7 @@
   "side": [
     "A bounding straight edge of a two-dimensional shape.",
     "A flat surface of a three-dimensional object; a face.",
-    "One half (left or right, top or bottom, front or back, etc.) of something or someone.",
-    "A region in a specified position with respect to something.",
-    "The portion of the human torso usually covered by the arms when they are not raised; the areas on the left and right between the belly or chest and the back.",
-    "One surface of a sheet of paper (used instead of \"page\", which can mean one or both surfaces.)",
-    "One possible aspect of a concept, person, or thing.",
-    "One set of competitors in a game.",
-    "A sports team.",
-    "A group of morris dancers who perform together.",
-    "A group having a particular allegiance in a conflict or competition.",
-    "A recorded piece of music; a record, especially in jazz.",
-    "Sidespin; english",
-    "A line of descent traced through a particular relative, usually a parent or spouse, as distinguished from that traced through another.",
-    "The batters faced in an inning by a particular pitcher.",
-    "A written monologue or part of a scene to be read by an actor at an audition.",
-    "A person who prefers not to engage in anal sex during same-sex sexual activity.",
-    "Being on the left or right, or toward the left or right; lateral.",
-    "Indirect; oblique; incidental.",
-    "To ally oneself, be in an alliance, usually with \"with\" or rarely \"in with\"",
-    "To lean on one side.",
-    "To work (a timber or rib) to a certain thickness by trimming the sides.",
-    "To furnish with a siding.",
-    "To provide with, as a side or accompaniment.",
-    "Far; distant.",
-    "To clear, tidy or sort."
+    "A sports team."
   ],
   "sided": [
     "simple past and past participle of side"
@@ -43496,16 +43071,7 @@
     "The custom of honoring a family patron saint, celebrated chiefly by the Serbs, but also by some Macedonians, Montenegrins, Bulgarians and Gorani."
   ],
   "slave": [
-    "A person who is held in servitude as the property of another person, and whose labor (and often also whose body and life) is subject to the owner's volition and control.",
-    "A drudge; one who labors or is obliged (e.g. by prior contract) to labor like a slave with limited rights, e.g. an indentured servant.",
-    "An abject person.",
-    "One who has no power of resistance to something, one who surrenders to or is under the domination of something.",
-    "A submissive partner in a BDSM relationship who consensually submits to, sexually or personally, serving one or more masters or mistresses.",
-    "A sex slave, a person who is forced against their will to perform, for another person or group, sexual acts on a regular or continuing basis.",
-    "A device (such as a secondary flash or hard drive) that is subject to the control of another (a master).",
-    "To work as a slaver, to enslave people.",
-    "To work hard.",
-    "To place a device under the control of another."
+    "A person who is held in servitude as the property of another person, and whose labor (and often also whose body and life) is subject to the owner's volition and control."
   ],
   "slay": [
     "To amaze, stun, or otherwise incapacitate by excellence; to excel at something.",
@@ -44169,15 +43735,7 @@
   ],
   "smut": [
     "Soot.",
-    "A flake of ash or soot.",
-    "Sexually vulgar material; something that is sexual in a dirty way; pornographic material.",
-    "Obscene language; ribaldry; obscenity.",
-    "Any of a range of fungi, mostly Ustilaginomycetes, that cause plant disease in grasses, including cereal crops; the disease so caused.",
-    "Bad, soft coal containing earthy matter, found in the immediate locality of faults.",
-    "To stain (or be stained) with soot or other dirt.",
-    "To taint (grain, etc.) with the smut fungus.",
-    "To become tainted by the smut fungus.",
-    "To clear of the smut fungus."
+    "A flake of ash or soot."
   ],
   "snack": [
     "A light meal.",
@@ -45137,14 +44695,8 @@
     "To fetter, as a horse; to hobble."
   ],
   "spank": [
-    "To beat, smack or slap a person's buttocks, with the bare hand or other object, as punishment, or for sexual gratification.",
     "To soundly defeat, to trounce.",
-    "To hit very hard.",
-    "An instance of spanking, separately or part of a multiple blows-beating; a smack, swat, or slap.",
-    "A slapping sound, as produced by spanking.",
-    "To move quickly and nimbly on foot; to stride or run at a brisk pace.",
-    "To move or turn rapidly, as the gears of a machine or the sails of a ship.",
-    "To shoot out or throw violently; to hurl or knock out."
+    "To hit very hard."
   ],
   "spar": [
     "A rafter of a roof.",
@@ -47531,11 +47083,7 @@
     "A social meal at a restaurant between two university societies, usually involving drinking and banter; commonly associated with fining and pennying; equivalent to a crewdate at Oxford University."
   ],
   "sward": [
-    "Earth which grass has grown into the upper layer of; greensward, sod, turf; (countable) a portion of such earth.",
-    "An expanse of land covered in grass; a lawn or meadow.",
-    "To cover (ground, etc.) with sward.",
-    "Of ground, etc.: to be covered with sward; to develop a covering of sward.",
-    "A homosexual man."
+    "An area of grass."
   ],
   "swarf": [
     "The waste chips or shavings from an abrasive activity, such as metalworking, a saw cutting wood, or the use of a grindstone or whetstone.",
@@ -47782,38 +47330,7 @@
   "swing": [
     "To rotate about an off-centre fixed point.",
     "To dance.",
-    "To ride on a swing.",
-    "To participate in the swinging lifestyle; to participate in wifeswapping.",
-    "To hang from the gallows; to be punished by hanging, swing for something or someone; (often hyperbolic) to be severely punished.",
-    "(of a bowler) To make the ball move sideways in its trajectory.",
-    "To move sideways in its trajectory.",
-    "To fluctuate or change.",
-    "To move (an object) backward and forward; to wave.",
-    "To change (a numerical result); especially to change the outcome of an election.",
-    "To play notes that are in pairs by making the first of the pair slightly longer than written (augmentation) and the second shorter, resulting in a bouncy, uneven rhythm.",
-    "To move one's arm in a punching motion.",
-    "In dancing, to turn around in a small circle with one's partner, holding hands or arms.",
-    "To admit or turn something for the purpose of shaping it; said of a lathe.",
-    "To put (a door, gate, etc.) on hinges so that it can swing or turn.",
-    "To turn round by action of wind or tide when at anchor.",
-    "To turn in a different direction.",
-    "To be sexually oriented.",
-    "To engage in sexual activity with a man (specifically, with his penis)",
-    "The act, or an instance, of swinging.",
-    "The manner in which something is swung.",
-    "The sweep or compass of a swinging body.",
-    "A line, cord, or other thing suspended and hanging loose, upon which anything may swing.",
-    "A hanging seat that can swing back and forth, in a children's playground, for acrobats in a circus, or on a porch for relaxing.",
-    "An energetic and acrobatic late-1930s partner-based dance style, also known as jitterbug and lindy-hop.",
-    "The genre of music associated with this dance style.",
-    "The amount of change towards or away from something.",
-    "Sideways movement of the ball as it flies through the air.",
-    "Capacity of a turning lathe, as determined by the diameter of the largest object that can be turned in it.",
-    "In a musical theater production, a performer who understudies several roles.",
-    "A basic dance step in which a pair link hands and turn round together in a circle.",
-    "The maximum amount of change that has occurred or can occur; the sum of the maximum changes in any direction.",
-    "Influence or power of anything put in motion.",
-    "A type of hook with the arm more extended."
+    "To ride on a swing."
   ],
   "swipe": [
     "To grab or bat quickly.",
@@ -48715,15 +48232,7 @@
   "tease": [
     "To separate the fibres of (a fibrous material).",
     "To comb (originally with teasels) so that the fibres all lie in one direction.",
-    "To backcomb.",
-    "To poke fun at, either cruelly or affectionately in a playful way.",
-    "To provoke or disturb; to annoy.",
-    "To manipulate or influence the behavior of, especially by repeated acts of irritation.",
-    "To entice, tempt.",
-    "To deliberately arouse someone sexually with no intention of satisfying that arousal.",
-    "One who teases.",
-    "A single act of teasing.",
-    "One who deliberately arouses others (usually men) sexually with no intention of satisfying that arousal."
+    "To provoke or disturb; to annoy."
   ],
   "teat": [
     "The projection of a mammary gland from which, on female therian mammals, milk is secreted.",
@@ -50085,39 +49594,7 @@
   "top": [
     "The highest or uppermost part of something.",
     "The near end of somewhere.",
-    "A child's spinning toy; a spinning top.",
-    "Someone who is eminent.",
-    "A peak price of a security during a trading period, before it begins a downward trend.",
-    "A dominant partner in a sadomasochistic relationship or roleplay.",
-    "A person who penetrates or has a preference for penetrating during intercourse.",
-    "A top quark.",
-    "The utmost degree; the acme; the summit.",
-    "A plug or conical block of wood with longitudinal grooves on its surface, in which the strands of the rope slide in the process of twisting.",
-    "Highest pitch or loudest volume.",
-    "A bundle or ball of slivers of combed wool, from which the noils, or dust, have been taken out.",
-    "The part of a cut gem between the girdle, or circumference, and the table, or flat upper surface.",
-    "A stroke on the top of the ball.",
-    "A forward spin given to the ball by hitting it on or near the top; topspin.",
-    "(A table at which there is, or which has enough seats for) a group of a specified number of people eating at a restaurant.",
-    "The First Sergeant or Master Sergeant (U.S. Marine Corps), senior enlisted man at company level.",
-    "a shoot (eaten as a vegetable).",
-    "To cover on the top or with a top.",
-    "To exceed in height.",
-    "To excel, to surpass, to beat, to exceed.",
-    "To be in the lead, to be at number one position (of).",
-    "To cut or remove the top (as of a tree)",
-    "To be the dominant partner in a BDSM relationship or roleplay.",
-    "To penetrate during sexual intercourse.",
-    "To raise one end of (a yard, etc.), making it higher than the other.",
-    "To cover with another dye.",
-    "To put a stiffening piece or back on (a saw blade).",
-    "To strike the top of (an obstacle) with the hind feet while jumping, so as to gain new impetus.",
-    "To improve (domestic animals, especially sheep) by crossing certain individuals or breeds with other superior breeds.",
-    "To cut, break, or otherwise take off the top of (a steel ingot) to remove unsound metal.",
-    "To strike (the ball) above the centre; also, to make (a stroke, etc.) by hitting the ball in this way.",
-    "Situated on the top of something.",
-    "Relating to the chest or breasts.",
-    "Best, highest."
+    "A child's spinning toy; a spinning top."
   ],
   "topaz": [
     "A silicate mineral of aluminium and fluorine, usually tinted by impurities.",
@@ -50560,13 +50037,6 @@
   ],
   "trank": [
     "An oblong piece of skin from which the pieces for a glove are cut."
-  ],
-  "trans": [
-    "In (or constituting, forming, or describing) a double bond in which the greater radical on both ends is on the opposite side of the bond.",
-    "In (or constituting, forming, or describing) a coordination compound in which the two instances of a particular ligand are on opposite sides of the central atom.",
-    "Of the side of the Golgi apparatus farther from the endoplasmic reticulum.",
-    "Transgender or transsexual.",
-    "plural of tran"
   ],
   "trap": [
     "A machine or other device designed to catch (and sometimes kill) animals, either by holding them in a container, or by catching hold of part of the body.",
@@ -51355,11 +50825,6 @@
     "To post an entry to any microblogging site.",
     "used to represent the sound of a bird twittering: twit."
   ],
-  "twerk": [
-    "Synonym of twerking (“a sexually-provocative dance, involving the performer thrusting their hips back from a low squatting stance while shaking their buttocks”).",
-    "To dance in a sexually-provocative way using hip thrusts in a low squatting stance while shaking the buttocks; to take part in twerking.",
-    "An abrupt call, such as that made by the California quail."
-  ],
   "twice": [
     "Two times.",
     "Doubled in quantity, intensity, or degree."
@@ -52081,18 +51546,7 @@
   ],
   "vamp": [
     "The top part of a boot or shoe, above the sole and welt and in front of the ankle seam, that covers the instep and toes; the front part of an upper; the analogous part of a stocking.",
-    "Something added to give an old thing a new appearance.",
-    "Something patched up, pieced together, improvised, or refurbished.",
-    "A repeated and often improvised accompaniment, usually consisting of one or two measures, often a single chord or simple chord progression, repeated as necessary, for example, to accommodate dialogue or to anticipate the entrance of a soloist.",
-    "An activity or speech intended to fill or stall for time.",
-    "To patch, repair, or refurbish.",
-    "Often as vamp up: to fabricate or put together (something) from existing material, or by adding new material to something existing.",
-    "To cobble together, to extemporize, to improvise.",
-    "To attach a vamp (to footwear).",
-    "To delay or stall for time, as for an audience.",
-    "A flirtatious, seductive woman, especially one who exploits men by using their sexual desire for her.",
-    "To seduce or exploit someone.",
-    "To cosplay a vampire."
+    "Something added to give an old thing a new appearance."
   ],
   "vampy": [
     "Resembling or characteristic of a vamp; tending toward indecency."
@@ -53046,15 +52500,7 @@
     "To throw hard."
   ],
   "want": [
-    "To wish for or desire (something); to feel a need or desire for; to crave, hanker, or demand.",
-    "To wish, desire, or demand to see, have the presence of or do business with.",
-    "To desire (to experience desire); to wish.",
-    "To desire a romantic or (especially) sexual relationship with someone; to lust for.",
-    "A desire, wish, longing.",
-    "Lack, absence, deficiency.",
-    "Poverty.",
-    "Something needed or desired; a thing of which the loss is felt.",
-    "A depression in coal strata, hollowed out before the subsequent deposition took place."
+    "To wish for or desire (something); to feel a need or desire for; to crave, hanker, or demand."
   ],
   "wap": [
     "A blow, hitbeating; a whap.",
@@ -54081,12 +53527,7 @@
     "To convert to a data type that can hold a larger number of distinct values."
   ],
   "widow": [
-    "A person whose spouse is absent:",
-    "An additional hand of playing cards dealt face-down in some card games, to be used by the highest bidder.",
-    "A single line of type that ends a paragraph but is separated from it by being carried over to the next page or column.",
-    "Any venomous spider of the genus Latrodectus (called \"widows\" because of the practice of sexual cannibalism observed among many of these species).",
-    "To make a widow or widower of someone; to cause the death of the spouse of.",
-    "To strip of anything valued."
+    "A person whose spouse is absent."
   ],
   "width": [
     "The state of being wide.",
@@ -55248,9 +54689,6 @@
   ],
   "yum": [
     "Indicating delight at the flavor of food."
-  ],
-  "yuri": [
-    "A narrative or visual work featuring a romantic or sexual relationship between women."
   ],
   "yurt": [
     "A large, round, semi-permanent tent with vertical walls and a conical roof, usually associated with Central Asia and Mongolia (where it is known as a ger)."
