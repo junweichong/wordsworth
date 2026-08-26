@@ -1416,57 +1416,6 @@
     // ═══════════════════════════════════════════════════════
     // Results
     // ═══════════════════════════════════════════════════════
-    async function fetchWordDefinition(word) {
-      const safeWord = String(word || '').trim();
-      if (!safeWord) throw new Error('No word provided.');
-
-      const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(safeWord.toLowerCase())}`;
-      console.log('Dictionary lookup:', url);
-
-      const response = await fetch(url, {
-        headers: { Accept: 'application/json' },
-        cache: 'no-store'
-      });
-
-      const responseText = await response.text();
-      let data;
-      try {
-        data = responseText ? JSON.parse(responseText) : null;
-      } catch (jsonError) {
-        console.error('Dictionary JSON parse failed:', jsonError, responseText);
-        throw new Error('Dictionary response was invalid JSON.');
-      }
-
-      if (!response.ok) {
-        console.error('Dictionary API error:', response.status, responseText);
-        throw new Error(`Dictionary lookup failed (${response.status}).`);
-      }
-
-      const entries = Array.isArray(data) ? data : [];
-      if (!entries.length) throw new Error('Definition not found.');
-
-      const meanings = [];
-      for (const entry of entries) {
-        const entryMeanings = Array.isArray(entry?.meanings) ? entry.meanings : [];
-        for (const meaning of entryMeanings) {
-          const definitions = (meaning?.definitions || [])
-            .map(d => typeof d?.definition === 'string' ? d.definition.trim() : null)
-            .filter(Boolean)
-            .slice(0, 2);
-
-          if (definitions.length) {
-            meanings.push({
-              partOfSpeech: meaning?.partOfSpeech || 'word',
-              definitions
-            });
-          }
-        }
-      }
-
-      if (!meanings.length) throw new Error('Definition not found.');
-      return { word: safeWord.toLowerCase(), meanings: meanings.slice(0, 3) };
-    }
-
     function renderDefinitionModal(word, meanings) {
       const modal = document.getElementById('definition-modal');
       const title = document.getElementById('definition-word');
@@ -1520,23 +1469,9 @@
       modal.setAttribute('aria-hidden', 'true');
     }
 
-    async function openWordDefinition(word) {
+    function openWordDefinition(word, meanings) {
       const modal = document.getElementById('definition-modal');
-      const content = document.getElementById('definition-content');
-      const title = document.getElementById('definition-word');
-
-      title.textContent = word.toUpperCase();
-      content.innerHTML = '<div class="definition-loading">Looking up the meaning…</div>';
-      modal.classList.add('visible');
-      modal.setAttribute('aria-hidden', 'false');
-
-      try {
-        const definition = await fetchWordDefinition(word);
-        renderDefinitionModal(definition.word, definition.meanings);
-      } catch (error) {
-        console.error('Word definition failed:', error);
-        content.innerHTML = `<div class="definition-error">${error && error.message ? error.message : 'No definition could be found for this word.'}</div>`;
-      }
+      renderDefinitionModal(word, meanings);
     }
 
     function renderResults(leaderboard) {
@@ -1590,7 +1525,7 @@
             chip.appendChild(score);
             chip.addEventListener('click', async (event) => {
               event.stopPropagation();
-              await openWordDefinition(w.word);
+              openWordDefinition(w.word, w.meanings);
             });
             wordsHtml.appendChild(chip);
           });

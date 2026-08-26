@@ -15,14 +15,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── In-memory store ──────────────────────────────────────────────
 const rooms = {};
 
-// ── Word list ───────────────────────────────────────────────────
-const rawDictionary = fs.readFileSync(path.join(__dirname, 'words.txt'), 'utf8');
-const DICTIONARY = new Set();
-rawDictionary.split('\n').forEach(word => {
-  const normalizedWord = word.trim().toLowerCase();
-  if (normalizedWord.length >= 3) DICTIONARY.add(normalizedWord);
-});
-console.log(`Dictionary loaded: ${DICTIONARY.size} words`);
+// ── Local dictionary ────────────────────────────────────────────
+const definitions = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'definitions.json'), 'utf8')
+);
+const DICTIONARY = new Map(
+  Object.entries(definitions)
+    .map(([word, wordDefinitions]) => [
+      word.trim().toLowerCase(),
+      Array.isArray(wordDefinitions)
+        ? wordDefinitions.filter(definition => typeof definition === 'string' && definition.trim())
+        : []
+    ])
+    .filter(([word, wordDefinitions]) => word.length >= 3 && wordDefinitions.length > 0)
+);
+console.log(`Dictionary loaded: ${DICTIONARY.size} words with local definitions`);
 
 // ── Helpers ──────────────────────────────────────────────────────
 function generateRoomId() {
@@ -54,8 +61,16 @@ function scoreBoard(grid) {
         // skip if any cell in slice is empty
         if (slice.some(c => !c)) continue;
         const word = slice.join('');
-        if (DICTIONARY.has(word)) {
-          words.push({ word, score: word.length === 5 ? 10 : word.length });
+        const wordDefinitions = DICTIONARY.get(word);
+        if (wordDefinitions) {
+          words.push({
+            word,
+            score: word.length === 5 ? 10 : word.length,
+            meanings: [{
+              partOfSpeech: 'definition',
+              definitions: wordDefinitions.slice(0, 2)
+            }]
+          });
         }
       }
     }
