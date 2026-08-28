@@ -405,40 +405,50 @@
 
     /* ── Game Screen ─────────────────────────────────────────── */
     #screen-game {
-      padding: 1rem;
-      gap: 0.75rem;
-      max-width: 700px;
+      padding: 0.75rem 1rem;
+      gap: 0.5rem;
+      max-width: 650px;
       margin: 0 auto;
       width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .game-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      width: 100%;
     }
 
     .game-title {
       font-family: 'Playfair Display', serif;
-      font-size: 1.4rem;
+      font-size: clamp(1rem, 2.5vh, 1.4rem);
       font-style: italic;
+      white-space: nowrap;
     }
 
     .current-letter {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
+      gap: 0.4rem;
       background: var(--forest);
       color: var(--paper);
       border-radius: 4px;
-      padding: 0.35rem 0.65rem;
-      min-width: 150px;
+      padding: 0.3rem 0.55rem;
+      min-width: max-content;
     }
 
     .current-letter-label {
-      font-size: 0.62rem;
+      font-size: clamp(0.55rem, 1.3vh, 0.65rem);
       letter-spacing: 0.08em;
       text-transform: uppercase;
       opacity: 0.8;
@@ -446,7 +456,7 @@
 
     .current-letter-value {
       font-family: 'Playfair Display', serif;
-      font-size: 1.5rem;
+      font-size: clamp(1.1rem, 2.6vh, 1.5rem);
       font-weight: 700;
       line-height: 1;
     }
@@ -456,7 +466,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 0.66rem;
+      font-size: clamp(0.6rem, 1.4vh, 0.7rem);
       opacity: 0.8;
     }
 
@@ -464,18 +474,22 @@
       background: var(--cream);
       border: 1.5px solid rgba(200, 169, 110, 0.5);
       border-radius: 4px;
-      padding: 0.5rem 1rem;
-      font-size: 0.78rem;
+      padding: 0.35rem 0.65rem;
+      font-size: clamp(0.65rem, 1.5vh, 0.78rem);
       color: var(--slate);
       text-align: center;
       flex: 1;
+      min-width: 0;
     }
 
     .turn-badge strong {
       display: block;
-      font-size: 0.95rem;
+      font-size: clamp(0.8rem, 2vh, 0.95rem);
       color: var(--ink);
       font-family: 'Playfair Display', serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .turn-badge.your-turn {
@@ -493,32 +507,32 @@
       background: var(--cream);
       border: 1.5px solid rgba(200, 169, 110, 0.4);
       border-radius: 4px;
-      padding: 1rem 1.25rem;
+      padding: 0.5rem 0.75rem;
       display: block;
-      min-height: 145px;
-    }
-
-    .call-panel.visible {
-      display: block;
+      flex-shrink: 0;
+      width: 100%;
     }
 
     .call-panel p {
-      font-size: 0.82rem;
+      font-size: clamp(0.72rem, 1.8vh, 0.82rem);
       color: var(--slate);
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.35rem;
+      text-align: center;
+    }
+
+    .call-panel p:only-child {
+      margin-bottom: 0;
     }
 
     .alphabet-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
-      gap: 0.4rem;
-      min-height: 90px;
+      grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+      gap: 0.3rem;
       transition: opacity 0.15s ease;
     }
 
     .alphabet-grid.inactive {
-      visibility: hidden;
-      pointer-events: none;
+      display: none;
     }
 
     .letter-btn {
@@ -527,7 +541,7 @@
       border: 1.5px solid rgba(200, 169, 110, 0.5);
       border-radius: 3px;
       font-family: 'DM Mono', monospace;
-      font-size: 1rem;
+      font-size: clamp(0.8rem, 2vh, 1rem);
       font-weight: 500;
       color: var(--ink);
       cursor: pointer;
@@ -535,6 +549,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 0;
     }
 
     .letter-btn:hover {
@@ -548,63 +563,75 @@
       background: var(--cream);
       border: 1.5px solid rgba(200, 169, 110, 0.4);
       border-radius: 4px;
-      padding: 0.75rem 1rem;
+      padding: 0.5rem 0.75rem;
     }
 
     .called-log-title {
-      font-size: 0.7rem;
-      letter-spacing: 0.16em;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--slate);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
     }
 
     .called-letters-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.4rem;
+      gap: 0.35rem;
     }
 
     .called-chip {
       background: var(--ink);
       color: var(--paper);
       border-radius: 3px;
-      padding: 0.25rem 0.5rem;
-      font-size: 0.85rem;
+      padding: 0.2rem 0.4rem;
+      font-size: 0.8rem;
       font-weight: 500;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0;
-      min-width: 36px;
+      min-width: 32px;
       text-align: center;
     }
 
     .called-chip span {
-      font-size: 0.58rem;
+      font-size: 0.55rem;
       opacity: 0.6;
       font-weight: 300;
       line-height: 1;
     }
 
-    /* The 6×6 board */
+    /* The 5x5 board */
     .board-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      width: 100%;
     }
 
     .board-label {
-      font-size: 0.7rem;
-      letter-spacing: 0.16em;
+      font-size: clamp(0.62rem, 1.5vh, 0.72rem);
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--slate);
+      text-align: center;
+      flex-shrink: 0;
     }
 
     .board {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 6px;
+      width: 100%;
+      max-width: min(100%, calc(100dvh - 210px), 480px);
+      aspect-ratio: 1;
+      container-type: inline-size;
+      container-name: board;
     }
 
     .cell {
@@ -615,7 +642,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(2rem, 6vw, 2.75rem);
+      font-size: clamp(1.2rem, 5vw, 2.5rem);
+      font-size: clamp(1rem, 11cqw, 2.5rem);
       font-weight: 700;
       font-family: 'DM Mono', monospace;
       color: var(--ink);
@@ -645,6 +673,46 @@
     .cell.filled:hover {
       background: rgba(26, 18, 8, 0.75);
       border-color: var(--ink);
+    }
+
+    @media (max-height: 660px) {
+      #screen-game {
+        padding: 0.4rem 0.6rem;
+        gap: 0.3rem;
+      }
+
+      .game-header {
+        gap: 0.3rem;
+      }
+
+      .board {
+        max-width: min(100%, calc(100dvh - 165px), 420px);
+        gap: 4px;
+      }
+
+      .call-panel {
+        padding: 0.35rem 0.5rem;
+      }
+
+      .alphabet-grid {
+        grid-template-columns: repeat(13, 1fr);
+        gap: 0.2rem;
+      }
+
+      .letter-btn {
+        font-size: 0.75rem;
+      }
+    }
+
+    @media (max-height: 520px) {
+      .game-title {
+        display: none;
+      }
+
+      .board {
+        max-width: min(100%, calc(100dvh - 125px), 340px);
+        gap: 3px;
+      }
     }
 
     /* Floating letter picker (shows when cell selected) */
@@ -1145,7 +1213,8 @@
 
   <div id="definition-modal" class="definition-modal" aria-hidden="true">
     <div class="definition-dialog" role="dialog" aria-modal="true" aria-labelledby="definition-word">
-      <button class="definition-close" type="button" onclick="closeDefinitionModal()" aria-label="Close definition">✕</button>
+      <button class="definition-close" type="button" onclick="closeDefinitionModal()"
+        aria-label="Close definition">✕</button>
       <p class="definition-kicker">Dictionary</p>
       <h3 id="definition-word">Word</h3>
       <div id="definition-content" class="definition-content"></div>
@@ -1154,7 +1223,8 @@
 
   <div id="how-to-play-modal" class="definition-modal" aria-hidden="true">
     <div class="definition-dialog" role="dialog" aria-modal="true" aria-labelledby="how-to-play-title">
-      <button class="definition-close" type="button" onclick="closeHowToPlay()" aria-label="Close how to play">✕</button>
+      <button class="definition-close" type="button" onclick="closeHowToPlay()"
+        aria-label="Close how to play">✕</button>
       <p class="definition-kicker">How to play</p>
       <h3 id="how-to-play-title">Build words together</h3>
       <div class="definition-content">
@@ -1165,7 +1235,8 @@
           <li>When all 25 letters are placed, your board is scored automatically.</li>
           <li>Make words across or down to score points.</li>
         </ol>
-        <p><strong>Scoring:</strong> 3-letter words score 3 points, 4-letter words score 4 points, and 5-letter words score 10 points.</p>
+        <p><strong>Scoring:</strong> 3-letter words score 3 points, 4-letter words score 4 points, and 5-letter words
+          score 10 points.</p>
       </div>
     </div>
   </div>
