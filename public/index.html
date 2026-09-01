@@ -606,14 +606,6 @@
             score.style.marginLeft = '0.25rem';
             chip.appendChild(score);
 
-            const board = row.querySelector('.score-board-grid');
-            const positions = Array.isArray(w.positions) ? w.positions : [];
-
-            chip.addEventListener('mouseenter', () => highlightBoardCells(board, positions));
-            chip.addEventListener('mouseleave', () => clearBoardHighlights(board));
-            chip.addEventListener('focus', () => highlightBoardCells(board, positions));
-            chip.addEventListener('blur', () => clearBoardHighlights(board));
-
             chip.addEventListener('click', async (event) => {
               event.stopPropagation();
               openWordDefinition(w.word, w.meanings);
@@ -646,6 +638,20 @@
         `;
 
         row.querySelector('.lb-details').appendChild(wordsHtml);
+
+        const board = row.querySelector('.score-board-grid');
+        const wordChips = [...row.querySelectorAll('.word-chip')];
+
+        wordChips.forEach((chip, chipIndex) => {
+          const w = entry.words[chipIndex];
+          if (!w) return;
+          const positions = Array.isArray(w.positions) ? w.positions : [];
+
+          chip.addEventListener('mouseenter', () => highlightBoardCells(board, positions));
+          chip.addEventListener('mouseleave', () => clearBoardHighlights(board));
+          chip.addEventListener('focus', () => highlightBoardCells(board, positions));
+          chip.addEventListener('blur', () => clearBoardHighlights(board));
+        });
 
         row.addEventListener('click', () => {
           const details = row.querySelector('.lb-details');
