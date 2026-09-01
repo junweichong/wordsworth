@@ -1,6 +1,6 @@
 # Wordsworth - Multiplayer Word Grid Game
 
-A real-time multiplayer word game for up to 50 players. Each player calls one letter per turn, then places the shared letters on a personal 5x5 grid to form words horizontally or vertically.
+A real-time multiplayer word game for up to 50 players. Each player calls one letter per turn, then places the shared letters on a personal 5x5 grid to form words horizontally or vertically. Once every board reaches 24 of 25 cells, each player chooses their own final letter for the last empty space on their board.
 
 ## Scoring
 

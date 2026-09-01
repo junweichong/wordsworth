@@ -60,11 +60,12 @@ function scoreBoard(grid) {
   const words = [];
   const size = 5;
 
-  function checkLine(cells) {
+  function checkLine(cells, positions) {
     const line = cells.map(c => (c || '').toLowerCase());
     for (let start = 0; start < size; start++) {
       for (let end = start + 3; end <= size; end++) {
         const slice = line.slice(start, end);
+        const slicePositions = positions.slice(start, end);
         // skip if any cell in slice is empty
         if (slice.some(c => !c)) continue;
         const word = slice.join('');
@@ -73,6 +74,7 @@ function scoreBoard(grid) {
           words.push({
             word,
             score: word.length === 5 ? 10 : word.length,
+            positions: slicePositions,
             meanings: [{
               partOfSpeech: 'definition',
               definitions: wordDefinitions.slice(0, 2)
@@ -85,13 +87,18 @@ function scoreBoard(grid) {
 
   // Rows
   for (let r = 0; r < size; r++) {
-    checkLine(grid.slice(r * size, r * size + size));
+    const rowPositions = Array.from({ length: size }, (_, c) => r * size + c);
+    checkLine(grid.slice(r * size, r * size + size), rowPositions);
   }
   // Columns
   for (let c = 0; c < size; c++) {
     const col = [];
-    for (let r = 0; r < size; r++) col.push(grid[r * size + c]);
-    checkLine(col);
+    const colPositions = [];
+    for (let r = 0; r < size; r++) {
+      col.push(grid[r * size + c]);
+      colPositions.push(r * size + c);
+    }
+    checkLine(col, colPositions);
   }
 
   const total = words.reduce((sum, w) => sum + w.score, 0);
@@ -126,7 +133,9 @@ io.on('connection', (socket) => {
       turnOrder: [],
       currentTurnIndex: 0,
       calledLetters: [],    // [{letter, calledBy}]
-      lettersLeft: 25
+      lettersLeft: 25,
+      finalTurnStarted: false,
+      finalTurnSelections: new Map()
     };
 
     socket.join(roomId);
@@ -175,7 +184,8 @@ io.on('connection', (socket) => {
       currentLetter: room.letterCalledThisTurn && lastCalled ? lastCalled.letter : null,
       currentLetterCaller: room.letterCalledThisTurn && lastCalled ? lastCalled.calledBy : null,
       placedThisTurn: hasPlacedThisTurn,
-      letterCalledThisTurn: room.letterCalledThisTurn || false
+      letterCalledThisTurn: room.letterCalledThisTurn || false,
+      finalTurnStarted: room.finalTurnStarted || false
     });
 
     io.to(room.id).emit('player_reconnected', {
@@ -263,7 +273,10 @@ io.on('connection', (socket) => {
     room.playersPlacedThisTurn = new Set();
     room.letterCalledThisTurn = false;
     room.turnTimer = turnTimer;
+    room.finalTurnStarted = false;
+    room.finalTurnSelections = new Map();
     if (room.turnTimeout) clearTimeout(room.turnTimeout);
+    if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
 
     const TOTAL_TURNS = 25;
     room.lettersLeft = TOTAL_TURNS;
@@ -299,6 +312,9 @@ io.on('connection', (socket) => {
     const roomId = socket.data.roomId;
     const room = rooms[roomId];
     if (!room || room.phase !== 'playing') return;
+    if (room.finalTurnStarted) {
+      return socket.emit('error', { message: 'The final letter is personal to each player.' });
+    }
 
     const expectedId = room.turnOrder[room.currentTurnIndex];
     if (socket.data.playerId !== expectedId) return socket.emit('error', { message: "It's not your turn." });
@@ -321,13 +337,57 @@ io.on('connection', (socket) => {
     startPlaceTimer(roomId, room, l);
   });
 
+  socket.on('final_letter_choice', ({ letter }) => {
+    const roomId = socket.data.roomId;
+    const room = rooms[roomId];
+    if (!room || !room.finalTurnStarted || room.phase !== 'playing') return;
+
+    const player = room.players.find(p => p.id === socket.data.playerId);
+    if (!player) return;
+
+    const l = String(letter || '').toUpperCase().trim();
+    if (!/^[A-Z]$/.test(l)) return socket.emit('error', { message: 'Invalid final letter.' });
+    if (room.finalTurnSelections.has(player.id)) {
+      return socket.emit('error', { message: 'You already chose your final letter.' });
+    }
+
+    const emptyIndex = (player.board || []).findIndex(cell => !cell);
+    if (emptyIndex === -1) {
+      return socket.emit('error', { message: 'No empty cells left on your board.' });
+    }
+
+    player.board[emptyIndex] = l;
+    room.finalTurnSelections.set(player.id, l);
+
+    if (room.finalTurnTimeout) {
+      clearTimeout(room.finalTurnTimeout);
+      room.finalTurnTimeout = null;
+    }
+
+    io.to(roomId).emit('final_letter_confirmed', {
+      playerId: player.id,
+      playerName: player.name,
+      letter: l,
+      grid: player.board || Array(25).fill(''),
+      emptyIndex,
+      remaining: room.players.length - room.finalTurnSelections.size,
+      allChosen: room.finalTurnSelections.size >= room.players.length
+    });
+
+    if (room.finalTurnSelections.size >= room.players.length) {
+      scoreAllAndEnd(roomId, room);
+    } else if (room.turnTimer > 0) {
+      startFinalTurnTimeout(roomId, room);
+    }
+  });
+
   // PLAYER PLACES A LETTER
   socket.on('letter_placed', ({ grid }) => {
     const roomId = socket.data.roomId;
     const room = rooms[roomId];
     if (!room || room.phase !== 'playing') return;
+    if (room.finalTurnStarted) return;
 
-    // Update server-side board state for this player
     const player = room.players.find(p => p.id === socket.data.playerId);
     if (player && Array.isArray(grid) && grid.length === 25) {
       player.board = grid;
@@ -335,6 +395,14 @@ io.on('connection', (socket) => {
 
     if (socket.data.playerId) {
       room.playersPlacedThisTurn.add(socket.data.playerId);
+    }
+
+    const allBoardsNearEnd = room.players.every(p => (p.board || []).filter(Boolean).length >= 24);
+    if (allBoardsNearEnd) {
+      room.letterCalledThisTurn = false;
+      room.playersPlacedThisTurn = new Set();
+      startFinalLetterTurn(roomId, room);
+      return;
     }
 
     if (room.playersPlacedThisTurn.size >= room.players.length && room.letterCalledThisTurn) {
@@ -434,9 +502,10 @@ function advanceTurn(roomId, room) {
 
   if (room.turnTimeout) clearTimeout(room.turnTimeout);
 
+  if (room.finalTurnStarted) return;
+
   if (isLastTurn) {
-    room.phase = 'scoring';
-    scoreAllAndEnd(roomId, room);
+    startFinalLetterTurn(roomId, room);
   } else {
     const nextId = room.turnOrder[room.currentTurnIndex];
     const nextPlayer = room.players.find(p => p.id === nextId);
@@ -451,6 +520,58 @@ function advanceTurn(roomId, room) {
   }
 }
 
+function startFinalLetterTurn(roomId, room) {
+  if (room.finalTurnStarted) return;
+
+  room.phase = 'playing';
+  room.finalTurnStarted = true;
+  room.finalTurnSelections = new Map();
+  if (room.turnTimeout) clearTimeout(room.turnTimeout);
+  if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
+
+  io.to(roomId).emit('final_turn_started', {
+    turnTimer: room.turnTimer,
+    message: 'Final turn — choose your own last letter for the final empty cell.'
+  });
+
+  if (room.turnTimer > 0) {
+    startFinalTurnTimeout(roomId, room);
+  }
+
+  console.log(`Final letter phase started in room ${roomId}`);
+}
+
+function startFinalTurnTimeout(roomId, room) {
+  if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
+
+  room.finalTurnTimeout = setTimeout(() => {
+    if (room.phase !== 'playing' || !room.finalTurnStarted) return;
+
+    room.players.forEach(player => {
+      if (room.finalTurnSelections.has(player.id)) return;
+      const emptyIndex = (player.board || []).findIndex(cell => !cell);
+      if (emptyIndex === -1) return;
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const fallbackLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+      player.board[emptyIndex] = fallbackLetter;
+      room.finalTurnSelections.set(player.id, fallbackLetter);
+      io.to(roomId).emit('final_letter_confirmed', {
+        playerId: player.id,
+        playerName: player.name,
+        letter: fallbackLetter,
+        grid: player.board || Array(25).fill(''),
+        emptyIndex,
+        remaining: room.players.length - room.finalTurnSelections.size,
+        allChosen: room.finalTurnSelections.size >= room.players.length
+      });
+    });
+
+    if (room.finalTurnSelections.size >= room.players.length) {
+      scoreAllAndEnd(roomId, room);
+    }
+  }, room.turnTimer * 1000);
+}
+
 function scoreAllAndEnd(roomId, room) {
   room.players.forEach(p => {
     const { words, total } = scoreBoard(p.board || Array(25).fill(''));
@@ -461,6 +582,12 @@ function scoreAllAndEnd(roomId, room) {
   const leaderboard = room.players
     .map(p => ({ name: p.name, score: p.score, words: p.words, board: p.board }))
     .sort((a, b) => b.score - a.score);
+
+  room.phase = 'scoring';
+  room.finalTurnStarted = false;
+  room.finalTurnSelections = new Map();
+  if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
+  room.finalTurnTimeout = null;
 
   io.to(roomId).emit('game_over', { leaderboard });
   console.log(`Game over in room ${roomId}`);

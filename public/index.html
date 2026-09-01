@@ -73,9 +73,12 @@
 
     <div class="card" style="padding:1rem">
       <p style="font-size:0.8rem;color:var(--slate);margin-bottom:0.75rem;">
-        <strong>How to play:</strong> Each player calls one letter per turn (randomly ordered).
-        Place letters on your personal 5x5 grid to form words horizontally or vertically.
-        3-letter words = 3pts, 4-letter = 4pts, 5-letter = 10pts. Highest score wins!
+        <strong>How to play:</strong> 
+        <br> Each player calls one letter per turn (randomly ordered).
+        <br> Place letters on your personal 5x5 grid to form words horizontally or vertically.
+        <br> When every board reaches 24/25 letters, each player chooses their own final letter for the last empty cell.
+        <br> 3-letter words = 3pts, 4-letter = 4pts, 5-letter = 10pts. 
+        <br> Highest score wins!
       </p>
     </div>
 
@@ -172,7 +175,7 @@
           <li>Create your own room or join a room with at least one other player.</li>
           <li>Players take turns choosing a letter for everyone.</li>
           <li>Place each letter on your 5x5 board.</li>
-          <li>When all 25 letters are placed, your board is scored automatically.</li>
+          <li>When every board reaches 24/25 letters, each player chooses their own final letter.</li>
           <li>Make words across or down to score points.</li>
         </ol>
         <p><strong>Scoring:</strong> 3-letter words score 3 points, 4-letter words score 4 points, and 5-letter words
@@ -205,6 +208,7 @@
       grid: Array(25).fill(''),   // player's own 5x5 board
       selectedCell: null,
       placedThisTurn: false,
+      finalTurnActive: false,
     };
 
     function saveSession(roomId, playerId, playerName) {
@@ -235,8 +239,13 @@
     // Screen management
     // ═══════════════════════════════════════════════════════
     function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById('screen-' + id).classList.add('active');
+      const target = document.getElementById('screen-' + id);
+      document.querySelectorAll('.screen').forEach(s => {
+        const isTarget = s === target;
+        s.classList.toggle('active', isTarget);
+        s.setAttribute('aria-hidden', String(!isTarget));
+      });
+
       if (id === 'game' && state.roomId) {
         const badge = document.getElementById('game-room-code-badge');
         if (badge) badge.textContent = state.roomId;
@@ -446,7 +455,13 @@
         const btn = document.createElement('button');
         btn.className = 'letter-btn';
         btn.textContent = letter;
-        btn.addEventListener('click', () => callLetter(letter));
+        btn.addEventListener('click', () => {
+          if (state.finalTurnActive) {
+            submitFinalLetter(letter);
+          } else {
+            callLetter(letter);
+          }
+        });
         grid.appendChild(btn);
       });
     }
@@ -454,6 +469,14 @@
     function callLetter(letter) {
       socket.emit('call_letter', { letter });
       document.getElementById('call-panel').classList.remove('visible');
+    }
+
+    function submitFinalLetter(letter) {
+      if (!state.finalTurnActive) return;
+      socket.emit('final_letter_choice', { letter });
+      document.getElementById('call-panel').classList.remove('visible');
+      document.getElementById('alphabet-grid').classList.add('inactive');
+      document.getElementById('call-status').innerHTML = 'Final letter selected — waiting for the other players...';
     }
 
     // ═══════════════════════════════════════════════════════
@@ -521,6 +544,22 @@
       const lb = document.getElementById('leaderboard');
       lb.innerHTML = '';
 
+      const clearBoardHighlights = (board) => {
+        if (!board) return;
+        board.querySelectorAll('.scoring-cell').forEach(cell => {
+          cell.classList.remove('word-highlighted');
+        });
+      };
+
+      const highlightBoardCells = (board, positions) => {
+        if (!board) return;
+        clearBoardHighlights(board);
+        positions.forEach(index => {
+          const cell = board.querySelector(`.scoring-cell[data-index="${index}"]`);
+          if (cell) cell.classList.add('word-highlighted');
+        });
+      };
+
       leaderboard.forEach((entry, i) => {
         const row = document.createElement('div');
         row.className = 'lb-row';
@@ -531,10 +570,10 @@
 
         const wordCount = entry.words ? entry.words.length : 0;
 
-        let boardHtml = '<div style="display:grid; grid-template-columns: repeat(5,1fr); gap:6px; max-width:260px; margin: 0 auto 1.25rem;">';
+        let boardHtml = '<div class="score-board-grid" style="display:grid; grid-template-columns: repeat(5,1fr); gap:6px; max-width:260px; margin: 0 auto 1.25rem;">';
         if (entry.board) {
-          entry.board.forEach(cell => {
-            boardHtml += `<div class="scoring-cell${cell ? ' filled' : ''}" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-family:'DM Mono', monospace; font-size:1.1rem; border:1.5px solid rgba(200,169,110,0.5); border-radius:4px;">${cell || ''}</div>`;
+          entry.board.forEach((cell, index) => {
+            boardHtml += `<div class="scoring-cell${cell ? ' filled' : ''}" data-index="${index}" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-family:'DM Mono', monospace; font-size:1.1rem; border:1.5px solid rgba(200,169,110,0.5); border-radius:4px;">${cell || ''}</div>`;
           });
         }
         boardHtml += '</div>';
@@ -566,6 +605,15 @@
             score.style.fontSize = '0.72rem';
             score.style.marginLeft = '0.25rem';
             chip.appendChild(score);
+
+            const board = row.querySelector('.score-board-grid');
+            const positions = Array.isArray(w.positions) ? w.positions : [];
+
+            chip.addEventListener('mouseenter', () => highlightBoardCells(board, positions));
+            chip.addEventListener('mouseleave', () => clearBoardHighlights(board));
+            chip.addEventListener('focus', () => highlightBoardCells(board, positions));
+            chip.addEventListener('blur', () => clearBoardHighlights(board));
+
             chip.addEventListener('click', async (event) => {
               event.stopPropagation();
               openWordDefinition(w.word, w.meanings);
@@ -689,6 +737,7 @@
       state.currentLetter = data.currentLetter;
       state.currentLetterCaller = data.currentLetterCaller;
       state.placedThisTurn = data.placedThisTurn || false;
+      state.finalTurnActive = !!data.finalTurnStarted;
 
       saveSession(data.roomId, data.playerId, data.playerName);
       toast(`Reconnected to game!`, 3000);
@@ -700,16 +749,30 @@
         showScreen('game');
         buildBoard();
         renderCalledLetters(state.currentLetter, state.currentLetterCaller);
-        updateTurnUI(data.currentTurnPlayerId, data.currentTurnPlayerName, data.turnIndex, data.totalTurns);
-        startVisualTimer(data.turnTimer);
 
-        if (data.letterCalledThisTurn && data.currentLetter) {
-          if (state.placedThisTurn) {
-            document.getElementById('call-status').innerHTML = `Letter <span class="highlighted-letter">${state.currentLetter}</span> placed — waiting for other players...`;
-            document.getElementById('call-panel').classList.remove('visible');
-          } else {
-            document.getElementById('call-status').innerHTML = `<strong>${state.currentLetterCaller}</strong> chose letter <span class="highlighted-letter">${state.currentLetter}</span> — place it on your board!`;
-            document.getElementById('call-panel').classList.remove('visible');
+        if (state.finalTurnActive) {
+          const badge = document.getElementById('turn-badge');
+          const nameEl = document.getElementById('turn-player-name');
+          const callStatus = document.getElementById('call-status');
+          const alphabetGrid = document.getElementById('alphabet-grid');
+          badge.className = 'turn-badge your-turn';
+          nameEl.textContent = 'Final letter';
+          callStatus.innerHTML = 'Final turn! Choose the letter for your last empty cell.';
+          document.getElementById('call-panel').classList.add('visible');
+          alphabetGrid.classList.remove('inactive');
+          buildAlphabet();
+        } else {
+          updateTurnUI(data.currentTurnPlayerId, data.currentTurnPlayerName, data.turnIndex, data.totalTurns);
+          startVisualTimer(data.turnTimer);
+
+          if (data.letterCalledThisTurn && data.currentLetter) {
+            if (state.placedThisTurn) {
+              document.getElementById('call-status').innerHTML = `Letter <span class="highlighted-letter">${state.currentLetter}</span> placed — waiting for other players...`;
+              document.getElementById('call-panel').classList.remove('visible');
+            } else {
+              document.getElementById('call-status').innerHTML = `<strong>${state.currentLetterCaller}</strong> chose letter <span class="highlighted-letter">${state.currentLetter}</span> — place it on your board!`;
+              document.getElementById('call-panel').classList.remove('visible');
+            }
           }
         }
       }
@@ -790,12 +853,47 @@
       state.currentLetterCaller = null;
       state.grid = Array(25).fill('');
       state.totalTurns = totalTurns;
+      state.finalTurnActive = false;
 
       showScreen('game');
       buildBoard();
       renderCalledLetters();
       updateTurnUI(currentTurn.playerId, currentTurn.playerName, 0, totalTurns);
       startVisualTimer(turnTimer);
+    });
+
+    socket.on('final_turn_started', ({ turnTimer, message }) => {
+      state.finalTurnActive = true;
+      state.placedThisTurn = false;
+      const badge = document.getElementById('turn-badge');
+      const nameEl = document.getElementById('turn-player-name');
+      const callStatus = document.getElementById('call-status');
+      const alphabetGrid = document.getElementById('alphabet-grid');
+
+      badge.className = 'turn-badge your-turn';
+      nameEl.textContent = 'Final letter';
+      callStatus.innerHTML = '<strong>Final round:</strong> every player chooses their own last letter for the final empty cell.';
+      document.getElementById('call-panel').classList.add('visible');
+      alphabetGrid.classList.remove('inactive');
+      buildAlphabet();
+      toast('Final round: choose your own last letter!', 4000);
+      startVisualTimer(turnTimer);
+    });
+
+    socket.on('final_letter_confirmed', ({ playerId, playerName, letter, grid, remaining, allChosen }) => {
+      if (playerId === state.playerId && Array.isArray(grid)) {
+        state.grid = grid.slice();
+        updateBoard();
+      }
+      if (playerId !== state.playerId) {
+        toast(`${playerName} picked "${letter}" for the final cell`, 2200);
+      }
+      if (remaining !== undefined && remaining > 0) {
+        document.getElementById('call-status').innerHTML = `${remaining} player${remaining === 1 ? '' : 's'} left to choose their final letter.`;
+      }
+      if (allChosen) {
+        document.getElementById('call-status').innerHTML = 'All players have chosen their final letters — scoring...';
+      }
     });
 
     socket.on('letter_called', ({ letter, calledBy, calledLetters, turnsLeft, turnTimer }) => {
@@ -841,6 +939,7 @@
     });
 
     socket.on('game_over', ({ leaderboard }) => {
+      state.finalTurnActive = false;
       clearSession();
       renderResults(leaderboard);
     });
