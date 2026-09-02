@@ -91,12 +91,17 @@
           <input type="checkbox" id="timer-off-cb" onchange="toggleTimerInput(this)"> No Timer
         </label>
       </div>
+      <label style="font-size:0.8rem;color:var(--ink);display:flex;align-items:center;gap:0.35rem;">
+        <input type="checkbox" id="spectator-host-cb"> Spectator mode (host does not play)
+      </label>
       <button class="btn btn-forest" onclick="startGame()" id="btn-start" style="margin-top:0.25rem;">Start
         Game</button>
     </div>
     <div id="lobby-waiting-msg" style="text-align:center;font-size:0.82rem;color:var(--slate);display:none;">
       Waiting for the host to start the game…
     </div>
+
+    <button class="btn btn-secondary" onclick="leaveRoom()" style="margin-top:1rem;">Leave Room</button>
 
     <div id="lobby-error" class="error-msg"></div>
   </div>
@@ -125,6 +130,11 @@
       <p id="call-status">Waiting for the current player to choose a letter.</p>
       <div class="alphabet-grid" id="alphabet-grid"></div>
     </div>
+
+    <section class="action-status-panel" id="action-status-panel" aria-live="polite">
+      <h2>Player status</h2>
+      <ul id="action-status-list"></ul>
+    </section>
 
 
 
@@ -205,6 +215,9 @@
       turnIndex: 0,
       totalTurns: 0,
       currentLetter: null,
+      activeTurnId: null,
+      spectator: false,
+      placementStatus: [],
       grid: Array(25).fill(''),   // player's own 5x5 board
       selectedCell: null,
       placedThisTurn: false,
@@ -295,7 +308,10 @@
         timer = parseInt(document.getElementById('timer-input').value);
         if (isNaN(timer) || timer < 1) timer = 30;
       }
-      socket.emit('start_game', { turnTimer: timer });
+      socket.emit('start_game', {
+        turnTimer: timer,
+        spectatorHost: document.getElementById('spectator-host-cb').checked
+      });
     }
 
     function toggleTimerInput(cb) {
@@ -396,7 +412,7 @@
       toast(`Placed ${letter} in cell ${state.selectedCell + 1}`);
       document.getElementById('call-status').innerHTML =
         `Letter <span class="highlighted-letter">${letter}</span> placed — waiting for other players...`;
-      socket.emit('letter_placed', { grid: state.grid });
+      socket.emit('letter_placed', { grid: state.grid, turnId: state.activeTurnId });
     }
 
     // ═══════════════════════════════════════════════════════
@@ -428,6 +444,13 @@
       idx.textContent = turnIndex + 1;
       tot.textContent = totalTurns;
 
+      if (state.spectator) {
+        callPanel.classList.remove('visible');
+        callStatus.textContent = 'Spectator mode — watching the players.';
+        alphabetGrid.classList.add('inactive');
+        return;
+      }
+
       const isMyTurn = currentPlayerId === state.playerId;
 
       if (isMyTurn) {
@@ -445,6 +468,19 @@
         callPanel.classList.add('visible');
         alphabetGrid.classList.add('inactive');
       }
+    }
+
+    function renderPlacementStatus(statuses = state.placementStatus) {
+      const list = document.getElementById('action-status-list');
+      if (!list) return;
+      list.innerHTML = '';
+      state.players.forEach(player => {
+        const status = statuses.find(item => item.playerId === player.id);
+        const li = document.createElement('li');
+        const label = player.spectator ? 'Spectator' : status?.completed ? 'Completed' : 'Waiting';
+        li.innerHTML = `<span>${player.name}${player.id === state.playerId ? ' (you)' : ''}</span><strong class="status-${label.toLowerCase()}">${label}</strong>`;
+        list.appendChild(li);
+      });
     }
 
     function buildAlphabet() {
@@ -695,6 +731,11 @@
       showScreen('landing');
     }
 
+    function leaveRoom() {
+      if (state.roomId) socket.emit('leave_room');
+      goHome();
+    }
+
     // ═══════════════════════════════════════════════════════
     // Socket events & Connection lifecycle
     // ═══════════════════════════════════════════════════════
@@ -737,13 +778,16 @@
       state.isHost = data.isHost;
       state.hostId = data.hostId;
       state.phase = data.phase;
+      state.spectator = !!data.spectator;
       state.players = data.players;
       state.grid = data.grid || Array(25).fill('');
       state.calledLetters = data.calledLetters || [];
       state.currentLetter = data.currentLetter;
       state.currentLetterCaller = data.currentLetterCaller;
+      state.activeTurnId = data.activeTurnId || null;
       state.placedThisTurn = data.placedThisTurn || false;
       state.finalTurnActive = !!data.finalTurnStarted;
+      state.placementStatus = data.placementStatus || [];
 
       saveSession(data.roomId, data.playerId, data.playerName);
       toast(`Reconnected to game!`, 3000);
@@ -753,7 +797,9 @@
         renderLobby();
       } else if (state.phase === 'playing') {
         showScreen('game');
+        document.getElementById('screen-game').classList.toggle('spectator-mode', state.spectator);
         buildBoard();
+        renderPlacementStatus();
         renderCalledLetters(state.currentLetter, state.currentLetterCaller);
 
         if (state.finalTurnActive) {
@@ -761,12 +807,19 @@
           const nameEl = document.getElementById('turn-player-name');
           const callStatus = document.getElementById('call-status');
           const alphabetGrid = document.getElementById('alphabet-grid');
-          badge.className = 'turn-badge your-turn';
-          nameEl.textContent = 'Final letter';
-          callStatus.innerHTML = 'Final turn! Choose the letter for your last empty cell.';
-          document.getElementById('call-panel').classList.add('visible');
-          alphabetGrid.classList.remove('inactive');
-          buildAlphabet();
+          if (state.spectator) {
+            badge.className = 'turn-badge';
+            nameEl.textContent = 'Final letter round';
+            callStatus.textContent = 'Spectator mode — watching the final letter choices.';
+            document.getElementById('call-panel').classList.remove('visible');
+          } else {
+            badge.className = 'turn-badge your-turn';
+            nameEl.textContent = 'Final letter';
+            callStatus.innerHTML = 'Final turn! Choose the letter for your last empty cell.';
+            document.getElementById('call-panel').classList.add('visible');
+            alphabetGrid.classList.remove('inactive');
+            buildAlphabet();
+          }
         } else {
           updateTurnUI(data.currentTurnPlayerId, data.currentTurnPlayerName, data.turnIndex, data.totalTurns);
           startVisualTimer(data.turnTimer);
@@ -852,17 +905,21 @@
       }, 1000);
     }
 
-    socket.on('game_started', ({ turnOrder, currentTurn, totalTurns, turnTimer }) => {
+    socket.on('game_started', ({ turnOrder, currentTurn, totalTurns, turnTimer, spectatorHost }) => {
       state.phase = 'playing';
+      state.spectator = state.isHost && spectatorHost === true;
       state.calledLetters = [];
       state.currentLetter = null;
       state.currentLetterCaller = null;
+      state.activeTurnId = null;
       state.grid = Array(25).fill('');
       state.totalTurns = totalTurns;
       state.finalTurnActive = false;
 
       showScreen('game');
+      document.getElementById('screen-game').classList.toggle('spectator-mode', state.spectator);
       buildBoard();
+      renderPlacementStatus();
       renderCalledLetters();
       updateTurnUI(currentTurn.playerId, currentTurn.playerName, 0, totalTurns);
       startVisualTimer(turnTimer);
@@ -871,6 +928,13 @@
     socket.on('final_turn_started', ({ turnTimer, message }) => {
       state.finalTurnActive = true;
       state.placedThisTurn = false;
+      if (state.spectator) {
+        document.getElementById('turn-badge').className = 'turn-badge';
+        document.getElementById('turn-player-name').textContent = 'Final letter round';
+        document.getElementById('call-status').textContent = 'Spectator mode — watching the final letter choices.';
+        document.getElementById('call-panel').classList.remove('visible');
+        return;
+      }
       const badge = document.getElementById('turn-badge');
       const nameEl = document.getElementById('turn-player-name');
       const callStatus = document.getElementById('call-status');
@@ -905,6 +969,7 @@
     socket.on('letter_called', ({ letter, calledBy, calledLetters, turnsLeft, turnTimer }) => {
       state.calledLetters = calledLetters;
       state.currentLetter = letter;
+      state.activeTurnId = calledLetters?.[calledLetters.length - 1]?.turnId || null;
       state.currentLetterCaller = calledBy;
       state.placedThisTurn = false;
       renderCalledLetters(letter, calledBy);
@@ -921,27 +986,32 @@
       startVisualTimer(turnTimer);
     });
 
+    socket.on('placement_status', ({ turnId, players }) => {
+      if (turnId && turnId !== state.activeTurnId) return;
+      state.placementStatus = players || [];
+      renderPlacementStatus();
+    });
+
     socket.on('next_turn', ({ playerId, playerName, turnIndex, totalTurns, turnTimer }) => {
       state.currentLetter = null;
       state.currentLetterCaller = null;
+      state.activeTurnId = null;
       renderCalledLetters();
       updateTurnUI(playerId, playerName, turnIndex, totalTurns);
       startVisualTimer(turnTimer);
     });
 
+    socket.on('placement_applied', ({ turnId, grid }) => {
+      if (turnId !== state.activeTurnId || !Array.isArray(grid)) return;
+      state.grid = grid.slice();
+      state.placedThisTurn = true;
+      updateBoard();
+      document.getElementById('call-status').innerHTML = 'Letter automatically placed — waiting for other players...';
+      document.getElementById('call-panel').classList.remove('visible');
+    });
+
     socket.on('force_place', ({ letter }) => {
-      if (!state.placedThisTurn) {
-        let emptyIndices = [];
-        for (let i = 0; i < 25; i++) {
-          if (!state.grid[i]) emptyIndices.push(i);
-        }
-        if (emptyIndices.length > 0) {
-          const randIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-          state.selectedCell = randIndex;
-          toast('Time is up! Letter auto-placed randomly.', 4000);
-          placeLetter(letter);
-        }
-      }
+      if (!state.placedThisTurn) toast('Time is up! The server is placing the letter.', 4000);
     });
 
     socket.on('game_over', ({ leaderboard }) => {

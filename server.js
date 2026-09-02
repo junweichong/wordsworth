@@ -18,6 +18,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 const rooms = {};
 const GRACE_PERIOD_MS = 120000;
 
+function activePlayers(room) {
+  return room.players.filter(player => !player.spectator);
+}
+
+function emitPlacementStatus(roomId, room) {
+  const active = activePlayers(room);
+  io.to(roomId).emit('placement_status', {
+    turnId: room.activeTurnId,
+    completedPlayerIds: [...(room.playersPlacedThisTurn || [])],
+    players: room.players.map(player => ({
+      playerId: player.id,
+      completed: player.spectator || room.playersPlacedThisTurn?.has(player.id) === true,
+      spectator: !!player.spectator
+    })),
+    completed: room.playersPlacedThisTurn?.size || 0,
+    total: active.length
+  });
+}
+
 // ── Local dictionary ────────────────────────────────────────────
 const definitions = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'definitions.json'), 'utf8')
@@ -127,13 +146,15 @@ io.on('connection', (socket) => {
         disconnectTimer: null,
         board: null,
         score: null,
-        words: null
+        words: null,
+        spectator: false
       }],
       phase: 'lobby',       // lobby | playing | scoring
       turnOrder: [],
       currentTurnIndex: 0,
       calledLetters: [],    // [{letter, calledBy}]
       lettersLeft: 25,
+      activeTurnId: null,
       finalTurnStarted: false,
       finalTurnSelections: new Map()
     };
@@ -149,6 +170,7 @@ io.on('connection', (socket) => {
   });
 
   function rejoinPlayer(socket, room, player) {
+    const previousSocketId = player.socketId;
     if (player.disconnectTimer) {
       clearTimeout(player.disconnectTimer);
       player.disconnectTimer = null;
@@ -156,6 +178,11 @@ io.on('connection', (socket) => {
 
     player.connected = true;
     player.socketId = socket.id;
+
+    if (previousSocketId && previousSocketId !== socket.id) {
+      const previousSocket = io.sockets.sockets.get(previousSocketId);
+      if (previousSocket) previousSocket.disconnect(true);
+    }
 
     socket.join(room.id);
     socket.data.roomId = room.id;
@@ -183,9 +210,16 @@ io.on('connection', (socket) => {
       turnTimer: room.turnTimer || 0,
       currentLetter: room.letterCalledThisTurn && lastCalled ? lastCalled.letter : null,
       currentLetterCaller: room.letterCalledThisTurn && lastCalled ? lastCalled.calledBy : null,
+      activeTurnId: room.activeTurnId || null,
+      placementStatus: room.players.map(currentPlayer => ({
+        playerId: currentPlayer.id,
+        completed: currentPlayer.spectator || room.playersPlacedThisTurn?.has(currentPlayer.id) === true,
+        spectator: !!currentPlayer.spectator
+      })),
       placedThisTurn: hasPlacedThisTurn,
       letterCalledThisTurn: room.letterCalledThisTurn || false,
-      finalTurnStarted: room.finalTurnStarted || false
+      finalTurnStarted: room.finalTurnStarted || false,
+      spectator: !!player.spectator
     });
 
     io.to(room.id).emit('player_reconnected', {
@@ -229,7 +263,8 @@ io.on('connection', (socket) => {
       disconnectTimer: null,
       board: null,
       score: null,
-      words: null
+      words: null,
+      spectator: false
     });
 
     socket.join(roomId);
@@ -257,21 +292,62 @@ io.on('connection', (socket) => {
     rejoinPlayer(socket, room, player);
   });
 
+  // LEAVE ROOM FROM LOBBY
+  socket.on('leave_room', () => {
+    const roomId = socket.data.roomId;
+    const playerId = socket.data.playerId;
+    const room = rooms[roomId];
+    if (!room || room.phase !== 'lobby' || !playerId) return;
+
+    const playerIndex = room.players.findIndex(player => player.id === playerId);
+    if (playerIndex === -1) return;
+
+    const [leavingPlayer] = room.players.splice(playerIndex, 1);
+    if (leavingPlayer.disconnectTimer) clearTimeout(leavingPlayer.disconnectTimer);
+    socket.leave(roomId);
+    socket.data.roomId = null;
+    socket.data.playerId = null;
+    socket.data.playerName = null;
+
+    if (room.players.length === 0) {
+      delete rooms[roomId];
+      return;
+    }
+
+    if (room.hostId === playerId) {
+      const nextHost = room.players.find(player => player.connected) || room.players[0];
+      room.hostId = nextHost.id;
+      io.to(roomId).emit('host_changed', {
+        newHostId: nextHost.id,
+        newHostName: nextHost.name
+      });
+    }
+
+    io.to(roomId).emit('player_left', {
+      playerName: leavingPlayer.name,
+      players: sanitiseRoom(room).players
+    });
+  });
+
   // HOST STARTS GAME
   socket.on('start_game', (data) => {
     const turnTimer = data && data.turnTimer ? data.turnTimer : 0;
+    const spectatorHost = data && data.spectatorHost === true;
     const roomId = socket.data.roomId;
     const room = rooms[roomId];
     if (!room) return;
     if (room.hostId !== socket.data.playerId) return socket.emit('error', { message: 'Only the host can start.' });
-    if (room.players.length < 2) return socket.emit('error', { message: 'Need at least 2 players.' });
+    const activePlayerCount = room.players.length - (spectatorHost ? 1 : 0);
+    if (activePlayerCount < 2) return socket.emit('error', { message: 'Need at least 2 active players.' });
     if (room.phase !== 'lobby') return;
 
     room.phase = 'playing';
+    room.players.forEach(player => { player.spectator = spectatorHost && player.id === socket.data.playerId; });
     room.calledLetters = [];
     room.currentTurnIndex = 0;
     room.playersPlacedThisTurn = new Set();
     room.letterCalledThisTurn = false;
+    room.activeTurnId = null;
     room.turnTimer = turnTimer;
     room.finalTurnStarted = false;
     room.finalTurnSelections = new Map();
@@ -282,7 +358,7 @@ io.on('connection', (socket) => {
     room.lettersLeft = TOTAL_TURNS;
 
     let generatedTurnOrder = [];
-    let playerIds = room.players.map(p => p.id);
+    let playerIds = activePlayers(room).map(p => p.id);
 
     while (generatedTurnOrder.length < TOTAL_TURNS) {
       let shuffled = shuffle([...playerIds]);
@@ -300,10 +376,12 @@ io.on('connection', (socket) => {
         playerName: currentPlayer?.name
       },
       totalTurns: room.lettersLeft,
-      turnTimer: room.turnTimer
+      turnTimer: room.turnTimer,
+      spectatorHost
     });
 
     startCallTimer(roomId, room, room.turnOrder[0]);
+    emitPlacementStatus(roomId, room);
     console.log(`Game started in room ${roomId} with ${room.players.length} players. Timer: ${turnTimer}s`);
   });
 
@@ -322,7 +400,10 @@ io.on('connection', (socket) => {
     const l = letter.toUpperCase().trim();
     if (!/^[A-Z]$/.test(l)) return socket.emit('error', { message: 'Invalid letter.' });
 
-    room.calledLetters.push({ letter: l, calledBy: socket.data.playerName });
+    const turnId = `${room.currentTurnIndex}-${room.calledLetters.length + 1}`;
+    room.activeTurnId = turnId;
+    room.currentLetter = l;
+    room.calledLetters.push({ letter: l, calledBy: socket.data.playerName, turnId });
     room.letterCalledThisTurn = true;
     room.playersPlacedThisTurn = new Set();
 
@@ -330,11 +411,13 @@ io.on('connection', (socket) => {
       letter: l,
       calledBy: socket.data.playerName,
       calledLetters: room.calledLetters,
+      turnId,
       turnsLeft: room.turnOrder.length - room.calledLetters.length,
       turnTimer: room.turnTimer
     });
+    emitPlacementStatus(roomId, room);
 
-    startPlaceTimer(roomId, room, l);
+    startPlaceTimer(roomId, room, l, turnId);
   });
 
   socket.on('final_letter_choice', ({ letter }) => {
@@ -344,6 +427,7 @@ io.on('connection', (socket) => {
 
     const player = room.players.find(p => p.id === socket.data.playerId);
     if (!player) return;
+    if (player.spectator) return socket.emit('error', { message: 'Spectators cannot choose letters.' });
 
     const l = String(letter || '').toUpperCase().trim();
     if (!/^[A-Z]$/.test(l)) return socket.emit('error', { message: 'Invalid final letter.' });
@@ -359,56 +443,86 @@ io.on('connection', (socket) => {
     player.board[emptyIndex] = l;
     room.finalTurnSelections.set(player.id, l);
 
-    if (room.finalTurnTimeout) {
-      clearTimeout(room.finalTurnTimeout);
-      room.finalTurnTimeout = null;
-    }
-
     io.to(roomId).emit('final_letter_confirmed', {
       playerId: player.id,
       playerName: player.name,
       letter: l,
       grid: player.board || Array(25).fill(''),
       emptyIndex,
-      remaining: room.players.length - room.finalTurnSelections.size,
-      allChosen: room.finalTurnSelections.size >= room.players.length
+      remaining: activePlayers(room).length - room.finalTurnSelections.size,
+      allChosen: room.finalTurnSelections.size >= activePlayers(room).length
     });
 
-    if (room.finalTurnSelections.size >= room.players.length) {
+    if (room.finalTurnSelections.size >= activePlayers(room).length) {
       scoreAllAndEnd(roomId, room);
-    } else if (room.turnTimer > 0) {
-      startFinalTurnTimeout(roomId, room);
     }
   });
 
   // PLAYER PLACES A LETTER
-  socket.on('letter_placed', ({ grid }) => {
+  socket.on('letter_placed', ({ grid, turnId }) => {
     const roomId = socket.data.roomId;
     const room = rooms[roomId];
     if (!room || room.phase !== 'playing') return;
     if (room.finalTurnStarted) return;
 
     const player = room.players.find(p => p.id === socket.data.playerId);
-    if (player && Array.isArray(grid) && grid.length === 25) {
-      player.board = grid;
+    if (!player || player.spectator || !room.letterCalledThisTurn || turnId !== room.activeTurnId) return;
+    if (room.playersPlacedThisTurn.has(player.id)) return;
+    if (!isValidPlacement(player.board, grid, room.currentLetter)) {
+      return socket.emit('error', { message: 'Invalid placement for this turn.' });
     }
 
-    if (socket.data.playerId) {
-      room.playersPlacedThisTurn.add(socket.data.playerId);
-    }
+    player.board = grid.slice();
+    room.playersPlacedThisTurn.add(player.id);
+    emitPlacementStatus(roomId, room);
 
-    const allBoardsNearEnd = room.players.every(p => (p.board || []).filter(Boolean).length >= 24);
-    if (allBoardsNearEnd) {
-      room.letterCalledThisTurn = false;
-      room.playersPlacedThisTurn = new Set();
-      startFinalLetterTurn(roomId, room);
-      return;
-    }
-
-    if (room.playersPlacedThisTurn.size >= room.players.length && room.letterCalledThisTurn) {
-      advanceTurn(roomId, room);
+    if (room.playersPlacedThisTurn.size >= activePlayers(room).length) {
+      resolveTurnPlacements(roomId, room, turnId);
     }
   });
+
+  function isValidPlacement(previousGrid, nextGrid, letter) {
+    if (!Array.isArray(nextGrid) || nextGrid.length !== 25 || !/^[A-Z]$/.test(letter || '')) return false;
+    if (nextGrid.some(cell => cell !== '' && !/^[A-Z]$/.test(cell))) return false;
+
+    const previous = Array.isArray(previousGrid) && previousGrid.length === 25
+      ? previousGrid
+      : Array(25).fill('');
+    let changedIndex = -1;
+    for (let index = 0; index < 25; index++) {
+      if (nextGrid[index] !== previous[index]) {
+        if (changedIndex !== -1 || previous[index] !== '' || nextGrid[index] !== letter) return false;
+        changedIndex = index;
+      }
+    }
+    return changedIndex !== -1;
+  }
+
+  function resolveTurnPlacements(roomId, room, turnId) {
+    if (!room.letterCalledThisTurn || room.activeTurnId !== turnId) return;
+
+    const missingPlayers = activePlayers(room).filter(player => !room.playersPlacedThisTurn.has(player.id));
+    for (const player of missingPlayers) {
+      const board = Array.isArray(player.board) && player.board.length === 25
+        ? player.board.slice()
+        : Array(25).fill('');
+      const emptyIndex = board.findIndex(cell => !cell);
+      if (emptyIndex !== -1) board[emptyIndex] = room.currentLetter;
+      player.board = board;
+      room.playersPlacedThisTurn.add(player.id);
+      if (player.connected && player.socketId) {
+        io.to(player.socketId).emit('placement_applied', {
+          turnId,
+          letter: room.currentLetter,
+          grid: board,
+          automatic: true
+        });
+      }
+    }
+
+    emitPlacementStatus(roomId, room);
+    advanceTurn(roomId, room, turnId);
+  }
 
   // DISCONNECT
   socket.on('disconnect', () => {
@@ -419,6 +533,7 @@ io.on('connection', (socket) => {
     const room = rooms[roomId];
     const player = room.players.find(p => p.id === playerId);
     if (!player) return;
+    if (player.socketId !== socket.id) return;
 
     player.connected = false;
     console.log(`${player.name} (${player.id}) temporarily disconnected from ${roomId}`);
@@ -486,7 +601,7 @@ io.on('connection', (socket) => {
 
         if (currentRoom.letterCalledThisTurn) {
           if (currentRoom.playersPlacedThisTurn) currentRoom.playersPlacedThisTurn.delete(playerId);
-          if (currentRoom.playersPlacedThisTurn && currentRoom.playersPlacedThisTurn.size >= currentRoom.players.length) {
+          if (currentRoom.playersPlacedThisTurn && currentRoom.playersPlacedThisTurn.size >= activePlayers(currentRoom).length) {
             advanceTurn(roomId, currentRoom);
           }
         }
@@ -495,8 +610,11 @@ io.on('connection', (socket) => {
   });
 });
 
-function advanceTurn(roomId, room) {
+function advanceTurn(roomId, room, turnId) {
+  if (turnId && room.activeTurnId !== turnId) return;
   room.letterCalledThisTurn = false;
+  room.activeTurnId = null;
+  room.currentLetter = null;
   room.currentTurnIndex++;
   const isLastTurn = room.currentTurnIndex >= room.turnOrder.length;
 
@@ -542,44 +660,44 @@ function startFinalLetterTurn(roomId, room) {
 }
 
 function startFinalTurnTimeout(roomId, room) {
-  if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
+  if (room.finalTurnTimeout) return;
 
   room.finalTurnTimeout = setTimeout(() => {
     if (room.phase !== 'playing' || !room.finalTurnStarted) return;
+    room.finalTurnTimeout = null;
 
-    room.players.forEach(player => {
+    activePlayers(room).forEach(player => {
       if (room.finalTurnSelections.has(player.id)) return;
       const emptyIndex = (player.board || []).findIndex(cell => !cell);
-      if (emptyIndex === -1) return;
       const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
       const fallbackLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
-      player.board[emptyIndex] = fallbackLetter;
+      if (emptyIndex !== -1) player.board[emptyIndex] = fallbackLetter;
       room.finalTurnSelections.set(player.id, fallbackLetter);
       io.to(roomId).emit('final_letter_confirmed', {
         playerId: player.id,
         playerName: player.name,
         letter: fallbackLetter,
         grid: player.board || Array(25).fill(''),
-        emptyIndex,
+        emptyIndex: emptyIndex === -1 ? null : emptyIndex,
         remaining: room.players.length - room.finalTurnSelections.size,
         allChosen: room.finalTurnSelections.size >= room.players.length
       });
     });
 
-    if (room.finalTurnSelections.size >= room.players.length) {
+    if (room.finalTurnSelections.size >= activePlayers(room).length) {
       scoreAllAndEnd(roomId, room);
     }
   }, room.turnTimer * 1000);
 }
 
 function scoreAllAndEnd(roomId, room) {
-  room.players.forEach(p => {
+  activePlayers(room).forEach(p => {
     const { words, total } = scoreBoard(p.board || Array(25).fill(''));
     p.score = total;
     p.words = words;
   });
 
-  const leaderboard = room.players
+  const leaderboard = activePlayers(room)
     .map(p => ({ name: p.name, score: p.score, words: p.words, board: p.board }))
     .sort((a, b) => b.score - a.score);
 
@@ -605,7 +723,10 @@ function startCallTimer(roomId, room, nextId) {
         const p = room.players.find(pl => pl.id === nextId);
         const playerName = p ? p.name : 'Server';
 
-        room.calledLetters.push({ letter: randomLetter, calledBy: playerName + ' (Auto)' });
+        const turnId = `${room.currentTurnIndex}-${room.calledLetters.length + 1}`;
+        room.activeTurnId = turnId;
+        room.currentLetter = randomLetter;
+        room.calledLetters.push({ letter: randomLetter, calledBy: playerName + ' (Auto)', turnId });
         room.letterCalledThisTurn = true;
         room.playersPlacedThisTurn = new Set();
 
@@ -613,30 +734,25 @@ function startCallTimer(roomId, room, nextId) {
           letter: randomLetter,
           calledBy: playerName + ' (Auto)',
           calledLetters: room.calledLetters,
+          turnId,
           turnsLeft: room.turnOrder.length - room.calledLetters.length,
           turnTimer: room.turnTimer
         });
+        emitPlacementStatus(roomId, room);
 
-        startPlaceTimer(roomId, room, randomLetter);
+        startPlaceTimer(roomId, room, randomLetter, turnId);
       }
     }, room.turnTimer * 1000);
   }
 }
 
-function startPlaceTimer(roomId, room, letter) {
+function startPlaceTimer(roomId, room, letter, turnId) {
   if (room.turnTimeout) clearTimeout(room.turnTimeout);
   if (room.turnTimer > 0) {
     room.turnTimeout = setTimeout(() => {
-      if (room.phase !== 'playing') return;
+      if (room.phase !== 'playing' || !room.letterCalledThisTurn || room.activeTurnId !== turnId) return;
       io.to(roomId).emit('force_place', { letter });
-      // Wait 600ms for clients to send their grids before scoring
-      setTimeout(() => {
-        if (room.phase !== 'playing') return;
-        room.playersPlacedThisTurn = new Set(room.players.map(p => p.id));
-        if (room.letterCalledThisTurn) {
-          advanceTurn(roomId, room);
-        }
-      }, 600);
+      resolveTurnPlacements(roomId, room, turnId);
     }, room.turnTimer * 1000);
   }
 }
@@ -646,7 +762,7 @@ function sanitiseRoom(room) {
     id: room.id,
     hostId: room.hostId,
     phase: room.phase,
-    players: room.players.map(p => ({ id: p.id, name: p.name, connected: p.connected !== false })),
+    players: room.players.map(p => ({ id: p.id, name: p.name, connected: p.connected !== false, spectator: !!p.spectator })),
     calledLetters: room.calledLetters,
     currentTurnIndex: room.currentTurnIndex,
     turnOrder: room.turnOrder

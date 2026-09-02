@@ -290,6 +290,57 @@ input[type="text"]:focus {
     gap: 1rem;
 }
 
+.action-status-panel {
+    background: var(--cream);
+    border: 1.5px solid rgba(200, 169, 110, 0.4);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+}
+
+.action-status-panel h2 {
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin-bottom: 0.75rem;
+}
+
+.action-status-panel ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem 1rem;
+}
+
+.action-status-panel li {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    border-bottom: 1px dashed rgba(200, 169, 110, 0.25);
+    padding-bottom: 0.35rem;
+}
+
+.action-status-panel strong {
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.status-completed { color: var(--forest); }
+.status-waiting { color: var(--rust); }
+.status-spectator { color: var(--slate); }
+
+.spectator-mode .board-wrap {
+    display: none;
+}
+
+@media (max-width: 480px) {
+    .action-status-panel ul {
+        grid-template-columns: 1fr;
+    }
+}
+
 .lobby-header {
     text-align: center;
     padding: 1.5rem 0 0.5rem;
