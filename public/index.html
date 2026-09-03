@@ -73,11 +73,11 @@
 
     <div class="card" style="padding:1rem">
       <p style="font-size:0.8rem;color:var(--slate);margin-bottom:0.75rem;">
-        <strong>How to play:</strong> 
+        <strong>How to play:</strong>
         <br> Each player calls one letter per turn (randomly ordered).
         <br> Place letters on your personal 5x5 grid to form words horizontally or vertically.
         <br> When every board reaches 24/25 letters, each player chooses their own final letter for the last empty cell.
-        <br> 3-letter words = 3pts, 4-letter = 4pts, 5-letter = 10pts. 
+        <br> 3-letter words = 3pts, 4-letter = 4pts, 5-letter = 10pts.
         <br> Highest score wins!
       </p>
     </div>
@@ -834,6 +834,8 @@
             }
           }
         }
+      } else if (state.phase === 'scoring' && data.leaderboard) {
+        renderResults(data.leaderboard);
       }
     });
 
@@ -1002,7 +1004,7 @@
     });
 
     socket.on('placement_applied', ({ turnId, grid }) => {
-      if (turnId !== state.activeTurnId || !Array.isArray(grid)) return;
+      if (!Array.isArray(grid)) return;
       state.grid = grid.slice();
       state.placedThisTurn = true;
       updateBoard();
@@ -1020,7 +1022,12 @@
       renderResults(leaderboard);
     });
 
-    socket.on('error', ({ message }) => {
+    socket.on('error', ({ message, rollback, grid }) => {
+      if (rollback && Array.isArray(grid)) {
+        state.grid = grid.slice();
+        state.placedThisTurn = false;
+        updateBoard();
+      }
       const screen = document.querySelector('.screen.active')?.id;
       if (screen === 'screen-landing') showError('landing-error', message);
       else if (screen === 'screen-lobby') showError('lobby-error', message);

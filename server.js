@@ -22,18 +22,23 @@ function activePlayers(room) {
   return room.players.filter(player => !player.spectator);
 }
 
+function connectedActivePlayers(room) {
+  return room.players.filter(player => !player.spectator && player.connected);
+}
+
 function emitPlacementStatus(roomId, room) {
   const active = activePlayers(room);
+  const connectedActive = connectedActivePlayers(room);
   io.to(roomId).emit('placement_status', {
     turnId: room.activeTurnId,
     completedPlayerIds: [...(room.playersPlacedThisTurn || [])],
     players: room.players.map(player => ({
       playerId: player.id,
-      completed: player.spectator || room.playersPlacedThisTurn?.has(player.id) === true,
+      completed: player.spectator || room.playersPlacedThisTurn?.has(player.id) === true || !player.connected,
       spectator: !!player.spectator
     })),
     completed: room.playersPlacedThisTurn?.size || 0,
-    total: active.length
+    total: connectedActive.length
   });
 }
 
@@ -219,7 +224,12 @@ io.on('connection', (socket) => {
       placedThisTurn: hasPlacedThisTurn,
       letterCalledThisTurn: room.letterCalledThisTurn || false,
       finalTurnStarted: room.finalTurnStarted || false,
-      spectator: !!player.spectator
+      spectator: !!player.spectator,
+      leaderboard: room.phase === 'scoring'
+        ? activePlayers(room)
+          .map(p => ({ name: p.name, score: p.score, words: p.words, board: p.board }))
+          .sort((a, b) => (b.score || 0) - (a.score || 0))
+        : null
     });
 
     io.to(room.id).emit('player_reconnected', {
@@ -393,6 +403,9 @@ io.on('connection', (socket) => {
     if (room.finalTurnStarted) {
       return socket.emit('error', { message: 'The final letter is personal to each player.' });
     }
+    if (room.letterCalledThisTurn) {
+      return socket.emit('error', { message: 'A letter has already been called for this turn.' });
+    }
 
     const expectedId = room.turnOrder[room.currentTurnIndex];
     if (socket.data.playerId !== expectedId) return socket.emit('error', { message: "It's not your turn." });
@@ -443,18 +456,19 @@ io.on('connection', (socket) => {
     player.board[emptyIndex] = l;
     room.finalTurnSelections.set(player.id, l);
 
+    const connectedActive = connectedActivePlayers(room);
     io.to(roomId).emit('final_letter_confirmed', {
       playerId: player.id,
       playerName: player.name,
       letter: l,
       grid: player.board || Array(25).fill(''),
       emptyIndex,
-      remaining: activePlayers(room).length - room.finalTurnSelections.size,
-      allChosen: room.finalTurnSelections.size >= activePlayers(room).length
+      remaining: connectedActive.length - room.finalTurnSelections.size,
+      allChosen: room.finalTurnSelections.size >= connectedActive.length
     });
 
-    if (room.finalTurnSelections.size >= activePlayers(room).length) {
-      scoreAllAndEnd(roomId, room);
+    if (room.finalTurnSelections.size >= connectedActive.length) {
+      finishFinalTurnAndScore(roomId, room);
     }
   });
 
@@ -469,14 +483,15 @@ io.on('connection', (socket) => {
     if (!player || player.spectator || !room.letterCalledThisTurn || turnId !== room.activeTurnId) return;
     if (room.playersPlacedThisTurn.has(player.id)) return;
     if (!isValidPlacement(player.board, grid, room.currentLetter)) {
-      return socket.emit('error', { message: 'Invalid placement for this turn.' });
+      return socket.emit('error', { message: 'Invalid placement for this turn.', rollback: true, grid: player.board || Array(25).fill('') });
     }
 
     player.board = grid.slice();
     room.playersPlacedThisTurn.add(player.id);
     emitPlacementStatus(roomId, room);
 
-    if (room.playersPlacedThisTurn.size >= activePlayers(room).length) {
+    const connectedActive = connectedActivePlayers(room);
+    if (room.playersPlacedThisTurn.size >= connectedActive.length) {
       resolveTurnPlacements(roomId, room, turnId);
     }
   });
@@ -498,6 +513,18 @@ io.on('connection', (socket) => {
     return changedIndex !== -1;
   }
 
+  function finishFinalTurnAndScore(roomId, room) {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    activePlayers(room).forEach(player => {
+      if (room.finalTurnSelections.has(player.id)) return;
+      const emptyIndex = (player.board || []).findIndex(cell => !cell);
+      const fallbackLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+      if (emptyIndex !== -1) player.board[emptyIndex] = fallbackLetter;
+      room.finalTurnSelections.set(player.id, fallbackLetter);
+    });
+    scoreAllAndEnd(roomId, room);
+  }
+
   function resolveTurnPlacements(roomId, room, turnId) {
     if (!room.letterCalledThisTurn || room.activeTurnId !== turnId) return;
 
@@ -517,6 +544,20 @@ io.on('connection', (socket) => {
           grid: board,
           automatic: true
         });
+      }
+    }
+
+    // Safety verification: Ensure all active boards have exact letter count parity
+    const targetCount = room.calledLetters.length;
+    for (const player of activePlayers(room)) {
+      const currentPlaced = (player.board || []).filter(cell => !!cell).length;
+      if (currentPlaced < targetCount) {
+        const board = Array.isArray(player.board) && player.board.length === 25
+          ? player.board.slice()
+          : Array(25).fill('');
+        const emptyIndex = board.findIndex(cell => !cell);
+        if (emptyIndex !== -1) board[emptyIndex] = room.currentLetter;
+        player.board = board;
       }
     }
 
@@ -601,8 +642,9 @@ io.on('connection', (socket) => {
 
         if (currentRoom.letterCalledThisTurn) {
           if (currentRoom.playersPlacedThisTurn) currentRoom.playersPlacedThisTurn.delete(playerId);
-          if (currentRoom.playersPlacedThisTurn && currentRoom.playersPlacedThisTurn.size >= activePlayers(currentRoom).length) {
-            advanceTurn(roomId, currentRoom);
+          const connectedActive = connectedActivePlayers(currentRoom);
+          if (currentRoom.playersPlacedThisTurn && currentRoom.playersPlacedThisTurn.size >= connectedActive.length) {
+            resolveTurnPlacements(roomId, currentRoom, currentRoom.activeTurnId);
           }
         }
       }
@@ -684,9 +726,7 @@ function startFinalTurnTimeout(roomId, room) {
       });
     });
 
-    if (room.finalTurnSelections.size >= activePlayers(room).length) {
-      scoreAllAndEnd(roomId, room);
-    }
+    finishFinalTurnAndScore(roomId, room);
   }, room.turnTimer * 1000);
 }
 
@@ -716,6 +756,7 @@ function startCallTimer(roomId, room, nextId) {
   if (room.turnTimer > 0) {
     room.turnTimeout = setTimeout(() => {
       if (room.phase !== 'playing') return;
+      if (room.letterCalledThisTurn) return;
       const expectedId = room.turnOrder[room.currentTurnIndex];
       if (expectedId === nextId) {
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
