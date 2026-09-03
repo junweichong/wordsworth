@@ -470,17 +470,64 @@
       }
     }
 
+    let reconnectCountdownInterval = null;
+
     function renderPlacementStatus(statuses = state.placementStatus) {
+      const panel = document.getElementById('action-status-panel');
+      if (panel) {
+        panel.style.display = state.spectator ? 'block' : 'none';
+      }
+      if (!state.spectator) return;
       const list = document.getElementById('action-status-list');
       if (!list) return;
       list.innerHTML = '';
+
+      let hasDisconnected = false;
+
       state.players.forEach(player => {
         const status = statuses.find(item => item.playerId === player.id);
+        const isDisconnected = status?.disconnected || player.connected === false;
+        let label = 'Waiting';
+        let statusClass = 'waiting';
+
+        if (player.spectator) {
+          label = 'Spectator';
+          statusClass = 'spectator';
+        } else if (isDisconnected) {
+          hasDisconnected = true;
+          const timeLeft = status?.reconnectTimeLeft !== undefined ? status.reconnectTimeLeft : 0;
+          label = `Disconnected (${timeLeft}s)`;
+          statusClass = 'disconnected';
+        } else if (status?.completed) {
+          label = 'Completed';
+          statusClass = 'completed';
+        }
+
         const li = document.createElement('li');
-        const label = player.spectator ? 'Spectator' : status?.completed ? 'Completed' : 'Waiting';
-        li.innerHTML = `<span>${player.name}${player.id === state.playerId ? ' (you)' : ''}</span><strong class="status-${label.toLowerCase()}">${label}</strong>`;
+        li.innerHTML = `<span>${player.name}${player.id === state.playerId ? ' (you)' : ''}</span><strong class="status-${statusClass}">${label}</strong>`;
         list.appendChild(li);
       });
+
+      if (hasDisconnected && !reconnectCountdownInterval) {
+        reconnectCountdownInterval = setInterval(() => {
+          let updatedAny = false;
+          (state.placementStatus || []).forEach(status => {
+            if (status.disconnected && status.reconnectTimeLeft > 0) {
+              status.reconnectTimeLeft -= 1;
+              updatedAny = true;
+            }
+          });
+          if (updatedAny) {
+            renderPlacementStatus();
+          } else {
+            clearInterval(reconnectCountdownInterval);
+            reconnectCountdownInterval = null;
+          }
+        }, 1000);
+      } else if (!hasDisconnected && reconnectCountdownInterval) {
+        clearInterval(reconnectCountdownInterval);
+        reconnectCountdownInterval = null;
+      }
     }
 
     function buildAlphabet() {
@@ -847,11 +894,12 @@
       }
     });
 
-    socket.on('player_disconnected', ({ playerId, playerName, players }) => {
+    socket.on('player_disconnected', ({ playerId, playerName, players, reconnectTimeLeft }) => {
       state.players = players;
       if (state.phase === 'lobby') renderLobby();
       if (playerName !== state.playerName) {
-        toast(`${playerName} disconnected (waiting for reconnect...)`, 4000);
+        const timeStr = reconnectTimeLeft ? ` (${reconnectTimeLeft}s left)` : '';
+        toast(`${playerName} disconnected${timeStr}`, 4000);
       }
     });
 

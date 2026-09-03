@@ -32,11 +32,19 @@ function emitPlacementStatus(roomId, room) {
   io.to(roomId).emit('placement_status', {
     turnId: room.activeTurnId,
     completedPlayerIds: [...(room.playersPlacedThisTurn || [])],
-    players: room.players.map(player => ({
-      playerId: player.id,
-      completed: player.spectator || room.playersPlacedThisTurn?.has(player.id) === true || !player.connected,
-      spectator: !!player.spectator
-    })),
+    players: room.players.map(player => {
+      const isDisconnected = !player.connected;
+      const timeLeft = isDisconnected && player.disconnectExpiresAt
+        ? Math.max(0, Math.ceil((player.disconnectExpiresAt - Date.now()) / 1000))
+        : 0;
+      return {
+        playerId: player.id,
+        completed: player.spectator || room.playersPlacedThisTurn?.has(player.id) === true,
+        disconnected: isDisconnected,
+        reconnectTimeLeft: timeLeft,
+        spectator: !!player.spectator
+      };
+    }),
     completed: room.playersPlacedThisTurn?.size || 0,
     total: connectedActive.length
   });
@@ -77,6 +85,18 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function getRandomEmptyIndex(board) {
+  const currentBoard = Array.isArray(board) && board.length === 25
+    ? board
+    : Array(25).fill('');
+  const emptyIndices = [];
+  for (let i = 0; i < 25; i++) {
+    if (!currentBoard[i]) emptyIndices.push(i);
+  }
+  if (emptyIndices.length === 0) return -1;
+  return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
 }
 
 // Score a 5x5 board (array of 25 cells, row-major)
@@ -149,6 +169,7 @@ io.on('connection', (socket) => {
         name: playerName,
         connected: true,
         disconnectTimer: null,
+        disconnectExpiresAt: null,
         board: null,
         score: null,
         words: null,
@@ -183,6 +204,7 @@ io.on('connection', (socket) => {
 
     player.connected = true;
     player.socketId = socket.id;
+    player.disconnectExpiresAt = null;
 
     if (previousSocketId && previousSocketId !== socket.id) {
       const previousSocket = io.sockets.sockets.get(previousSocketId);
@@ -216,11 +238,19 @@ io.on('connection', (socket) => {
       currentLetter: room.letterCalledThisTurn && lastCalled ? lastCalled.letter : null,
       currentLetterCaller: room.letterCalledThisTurn && lastCalled ? lastCalled.calledBy : null,
       activeTurnId: room.activeTurnId || null,
-      placementStatus: room.players.map(currentPlayer => ({
-        playerId: currentPlayer.id,
-        completed: currentPlayer.spectator || room.playersPlacedThisTurn?.has(currentPlayer.id) === true,
-        spectator: !!currentPlayer.spectator
-      })),
+      placementStatus: room.players.map(currentPlayer => {
+        const isDisconnected = !currentPlayer.connected;
+        const timeLeft = isDisconnected && currentPlayer.disconnectExpiresAt
+          ? Math.max(0, Math.ceil((currentPlayer.disconnectExpiresAt - Date.now()) / 1000))
+          : 0;
+        return {
+          playerId: currentPlayer.id,
+          completed: currentPlayer.spectator || room.playersPlacedThisTurn?.has(currentPlayer.id) === true,
+          disconnected: isDisconnected,
+          reconnectTimeLeft: timeLeft,
+          spectator: !!currentPlayer.spectator
+        };
+      }),
       placedThisTurn: hasPlacedThisTurn,
       letterCalledThisTurn: room.letterCalledThisTurn || false,
       finalTurnStarted: room.finalTurnStarted || false,
@@ -232,11 +262,15 @@ io.on('connection', (socket) => {
         : null
     });
 
-    io.to(room.id).emit('player_reconnected', {
-      playerId: player.id,
-      playerName: player.name,
-      players: sanitiseRoom(room).players
-    });
+    const host = room.players.find(p => p.id === room.hostId && p.connected);
+    if (host && host.socketId) {
+      io.to(host.socketId).emit('player_reconnected', {
+        playerId: player.id,
+        playerName: player.name,
+        players: sanitiseRoom(room).players
+      });
+    }
+    emitPlacementStatus(room.id, room);
 
     console.log(`${player.name} (${player.id}) reconnected to room ${room.id}`);
   }
@@ -271,6 +305,7 @@ io.on('connection', (socket) => {
       name: playerName,
       connected: true,
       disconnectTimer: null,
+      disconnectExpiresAt: null,
       board: null,
       score: null,
       words: null,
@@ -364,7 +399,7 @@ io.on('connection', (socket) => {
     if (room.turnTimeout) clearTimeout(room.turnTimeout);
     if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
 
-    const TOTAL_TURNS = 25;
+    const TOTAL_TURNS = 24;
     room.lettersLeft = TOTAL_TURNS;
 
     let generatedTurnOrder = [];
@@ -513,58 +548,6 @@ io.on('connection', (socket) => {
     return changedIndex !== -1;
   }
 
-  function finishFinalTurnAndScore(roomId, room) {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    activePlayers(room).forEach(player => {
-      if (room.finalTurnSelections.has(player.id)) return;
-      const emptyIndex = (player.board || []).findIndex(cell => !cell);
-      const fallbackLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
-      if (emptyIndex !== -1) player.board[emptyIndex] = fallbackLetter;
-      room.finalTurnSelections.set(player.id, fallbackLetter);
-    });
-    scoreAllAndEnd(roomId, room);
-  }
-
-  function resolveTurnPlacements(roomId, room, turnId) {
-    if (!room.letterCalledThisTurn || room.activeTurnId !== turnId) return;
-
-    const missingPlayers = activePlayers(room).filter(player => !room.playersPlacedThisTurn.has(player.id));
-    for (const player of missingPlayers) {
-      const board = Array.isArray(player.board) && player.board.length === 25
-        ? player.board.slice()
-        : Array(25).fill('');
-      const emptyIndex = board.findIndex(cell => !cell);
-      if (emptyIndex !== -1) board[emptyIndex] = room.currentLetter;
-      player.board = board;
-      room.playersPlacedThisTurn.add(player.id);
-      if (player.connected && player.socketId) {
-        io.to(player.socketId).emit('placement_applied', {
-          turnId,
-          letter: room.currentLetter,
-          grid: board,
-          automatic: true
-        });
-      }
-    }
-
-    // Safety verification: Ensure all active boards have exact letter count parity
-    const targetCount = room.calledLetters.length;
-    for (const player of activePlayers(room)) {
-      const currentPlaced = (player.board || []).filter(cell => !!cell).length;
-      if (currentPlaced < targetCount) {
-        const board = Array.isArray(player.board) && player.board.length === 25
-          ? player.board.slice()
-          : Array(25).fill('');
-        const emptyIndex = board.findIndex(cell => !cell);
-        if (emptyIndex !== -1) board[emptyIndex] = room.currentLetter;
-        player.board = board;
-      }
-    }
-
-    emitPlacementStatus(roomId, room);
-    advanceTurn(roomId, room, turnId);
-  }
-
   // DISCONNECT
   socket.on('disconnect', () => {
     const roomId = socket.data.roomId;
@@ -577,13 +560,20 @@ io.on('connection', (socket) => {
     if (player.socketId !== socket.id) return;
 
     player.connected = false;
+    player.disconnectExpiresAt = Date.now() + GRACE_PERIOD_MS;
     console.log(`${player.name} (${player.id}) temporarily disconnected from ${roomId}`);
 
-    io.to(roomId).emit('player_disconnected', {
-      playerId: player.id,
-      playerName: player.name,
-      players: sanitiseRoom(room).players
-    });
+    const host = room.players.find(p => p.id === room.hostId && p.connected);
+    if (host && host.socketId) {
+      io.to(host.socketId).emit('player_disconnected', {
+        playerId: player.id,
+        playerName: player.name,
+        players: sanitiseRoom(room).players,
+        reconnectTimeLeft: Math.ceil(GRACE_PERIOD_MS / 1000)
+      });
+    }
+
+    emitPlacementStatus(roomId, room);
 
     // Start 45-second grace period timer for player to reconnect
     player.disconnectTimer = setTimeout(() => {
@@ -652,6 +642,62 @@ io.on('connection', (socket) => {
   });
 });
 
+function finishFinalTurnAndScore(roomId, room) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  activePlayers(room).forEach(player => {
+    if (room.finalTurnSelections.has(player.id)) return;
+    const board = Array.isArray(player.board) && player.board.length === 25
+      ? player.board.slice()
+      : Array(25).fill('');
+    const randomIndex = getRandomEmptyIndex(board);
+    const fallbackLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+    if (randomIndex !== -1) board[randomIndex] = fallbackLetter;
+    player.board = board;
+    room.finalTurnSelections.set(player.id, fallbackLetter);
+  });
+  scoreAllAndEnd(roomId, room);
+}
+
+function resolveTurnPlacements(roomId, room, turnId) {
+  if (!room.letterCalledThisTurn || room.activeTurnId !== turnId) return;
+
+  const missingPlayers = activePlayers(room).filter(player => !room.playersPlacedThisTurn.has(player.id));
+  for (const player of missingPlayers) {
+    const board = Array.isArray(player.board) && player.board.length === 25
+      ? player.board.slice()
+      : Array(25).fill('');
+    const randomIndex = getRandomEmptyIndex(board);
+    if (randomIndex !== -1) board[randomIndex] = room.currentLetter;
+    player.board = board;
+    room.playersPlacedThisTurn.add(player.id);
+    if (player.connected && player.socketId) {
+      io.to(player.socketId).emit('placement_applied', {
+        turnId,
+        letter: room.currentLetter,
+        grid: board,
+        automatic: true
+      });
+    }
+  }
+
+  // Safety verification: Ensure all active boards have exact letter count parity
+  const targetCount = room.calledLetters.length;
+  for (const player of activePlayers(room)) {
+    const currentPlaced = (player.board || []).filter(cell => !!cell).length;
+    if (currentPlaced < targetCount) {
+      const board = Array.isArray(player.board) && player.board.length === 25
+        ? player.board.slice()
+        : Array(25).fill('');
+      const randomIndex = getRandomEmptyIndex(board);
+      if (randomIndex !== -1) board[randomIndex] = room.currentLetter;
+      player.board = board;
+    }
+  }
+
+  emitPlacementStatus(roomId, room);
+  advanceTurn(roomId, room, turnId);
+}
+
 function advanceTurn(roomId, room, turnId) {
   if (turnId && room.activeTurnId !== turnId) return;
   room.letterCalledThisTurn = false;
@@ -710,17 +756,21 @@ function startFinalTurnTimeout(roomId, room) {
 
     activePlayers(room).forEach(player => {
       if (room.finalTurnSelections.has(player.id)) return;
-      const emptyIndex = (player.board || []).findIndex(cell => !cell);
+      const board = Array.isArray(player.board) && player.board.length === 25
+        ? player.board.slice()
+        : Array(25).fill('');
+      const randomIndex = getRandomEmptyIndex(board);
       const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
       const fallbackLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
-      if (emptyIndex !== -1) player.board[emptyIndex] = fallbackLetter;
+      if (randomIndex !== -1) board[randomIndex] = fallbackLetter;
+      player.board = board;
       room.finalTurnSelections.set(player.id, fallbackLetter);
       io.to(roomId).emit('final_letter_confirmed', {
         playerId: player.id,
         playerName: player.name,
         letter: fallbackLetter,
         grid: player.board || Array(25).fill(''),
-        emptyIndex: emptyIndex === -1 ? null : emptyIndex,
+        emptyIndex: randomIndex === -1 ? null : randomIndex,
         remaining: room.players.length - room.finalTurnSelections.size,
         allChosen: room.finalTurnSelections.size >= room.players.length
       });

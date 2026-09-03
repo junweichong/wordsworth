@@ -291,10 +291,15 @@ input[type="text"]:focus {
 }
 
 .action-status-panel {
+    display: none;
     background: var(--cream);
     border: 1.5px solid rgba(200, 169, 110, 0.4);
     border-radius: 4px;
     padding: 1rem 1.25rem;
+}
+
+.spectator-mode .action-status-panel {
+    display: block;
 }
 
 .action-status-panel h2 {
@@ -327,9 +332,21 @@ input[type="text"]:focus {
     text-transform: uppercase;
 }
 
-.status-completed { color: var(--forest); }
-.status-waiting { color: var(--rust); }
-.status-spectator { color: var(--slate); }
+.status-completed {
+    color: var(--forest);
+}
+
+.status-waiting {
+    color: var(--rust);
+}
+
+.status-spectator {
+    color: var(--slate);
+}
+
+.status-disconnected {
+    color: var(--red);
+}
 
 .spectator-mode .board-wrap {
     display: none;
