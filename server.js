@@ -337,12 +337,68 @@ io.on('connection', (socket) => {
     rejoinPlayer(socket, room, player);
   });
 
-  // LEAVE ROOM FROM LOBBY
+  function handleActivePlayerRemoval(roomId, room, playerId) {
+    if (room.phase !== 'playing') return;
+
+    const remainingActive = activePlayers(room);
+    const remainingIds = remainingActive.map(p => p.id);
+
+    if (remainingIds.length === 0) {
+      if (room.turnTimeout) clearTimeout(room.turnTimeout);
+      if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
+      delete rooms[roomId];
+      console.log(`Room ${roomId} deleted (no active players left)`);
+      return;
+    }
+
+    let wasTheirTurn = (room.turnOrder && room.turnOrder[room.currentTurnIndex] === playerId);
+
+    if (room.turnOrder) {
+      for (let i = room.currentTurnIndex; i < room.turnOrder.length; i++) {
+        if (room.turnOrder[i] === playerId) {
+          room.turnOrder[i] = remainingIds[Math.floor(Math.random() * remainingIds.length)];
+        }
+      }
+    }
+
+    if (room.finalTurnStarted) {
+      if (room.finalTurnSelections) room.finalTurnSelections.delete(playerId);
+      const connectedActive = connectedActivePlayers(room);
+      if (room.finalTurnSelections && room.finalTurnSelections.size >= connectedActive.length) {
+        finishFinalTurnAndScore(roomId, room);
+      }
+    } else {
+      if (wasTheirTurn && !room.letterCalledThisTurn) {
+        const nextId = room.turnOrder[room.currentTurnIndex];
+        const nextPlayer = room.players.find(p => p.id === nextId);
+        io.to(roomId).emit('next_turn', {
+          playerId: nextId,
+          playerName: nextPlayer?.name,
+          turnIndex: room.currentTurnIndex,
+          totalTurns: room.turnOrder.length,
+          turnTimer: room.turnTimer
+        });
+        startCallTimer(roomId, room, nextId);
+      }
+
+      if (room.letterCalledThisTurn) {
+        if (room.playersPlacedThisTurn) room.playersPlacedThisTurn.delete(playerId);
+        const connectedActive = connectedActivePlayers(room);
+        if (room.playersPlacedThisTurn && room.playersPlacedThisTurn.size >= connectedActive.length) {
+          resolveTurnPlacements(roomId, room, room.activeTurnId);
+        }
+      }
+    }
+
+    emitPlacementStatus(roomId, room);
+  }
+
+  // LEAVE ROOM
   socket.on('leave_room', () => {
     const roomId = socket.data.roomId;
     const playerId = socket.data.playerId;
     const room = rooms[roomId];
-    if (!room || room.phase !== 'lobby' || !playerId) return;
+    if (!room || !playerId) return;
 
     const playerIndex = room.players.findIndex(player => player.id === playerId);
     if (playerIndex === -1) return;
@@ -354,8 +410,13 @@ io.on('connection', (socket) => {
     socket.data.playerId = null;
     socket.data.playerName = null;
 
+    console.log(`${leavingPlayer.name} (${leavingPlayer.id}) left room ${roomId}`);
+
     if (room.players.length === 0) {
+      if (room.turnTimeout) clearTimeout(room.turnTimeout);
+      if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
       delete rooms[roomId];
+      console.log(`Room ${roomId} deleted (empty)`);
       return;
     }
 
@@ -372,6 +433,49 @@ io.on('connection', (socket) => {
       playerName: leavingPlayer.name,
       players: sanitiseRoom(room).players
     });
+
+    handleActivePlayerRemoval(roomId, room, playerId);
+  });
+
+  // HOST KICKS A PLAYER
+  socket.on('kick_player', ({ targetPlayerId }) => {
+    const roomId = socket.data.roomId;
+    const room = rooms[roomId];
+    if (!room) return;
+
+    if (room.hostId !== socket.data.playerId) {
+      return socket.emit('error', { message: 'Only the host can kick players.' });
+    }
+    if (targetPlayerId === room.hostId) {
+      return socket.emit('error', { message: 'Host cannot kick themselves.' });
+    }
+
+    const playerIndex = room.players.findIndex(p => p.id === targetPlayerId);
+    if (playerIndex === -1) return;
+
+    const [kickedPlayer] = room.players.splice(playerIndex, 1);
+    if (kickedPlayer.disconnectTimer) clearTimeout(kickedPlayer.disconnectTimer);
+
+    if (kickedPlayer.socketId) {
+      const kickedSocket = io.sockets.sockets.get(kickedPlayer.socketId);
+      if (kickedSocket) {
+        kickedSocket.leave(roomId);
+        kickedSocket.data.roomId = null;
+        kickedSocket.data.playerId = null;
+        kickedSocket.data.playerName = null;
+        kickedSocket.emit('kicked_from_room', { message: 'You have been kicked by the host.' });
+      }
+    }
+
+    io.to(roomId).emit('player_kicked', {
+      kickedPlayerId: targetPlayerId,
+      kickedPlayerName: kickedPlayer.name,
+      players: sanitiseRoom(room).players
+    });
+
+    console.log(`${kickedPlayer.name} (${kickedPlayer.id}) was kicked from room ${roomId} by host`);
+
+    handleActivePlayerRemoval(roomId, room, targetPlayerId);
   });
 
   // HOST STARTS GAME
