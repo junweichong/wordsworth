@@ -1,0 +1,6 @@
+legacy-prototype/
+node_modules/
+.git/
+*.db
+*.db-shm
+*.db-wal
