@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wordsworth Admin — Game Replays</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg-dark: #0f1412;
+            --card-bg: #17201c;
+            --card-border: rgba(200, 169, 110, 0.25);
+            --gold: #c8a96e;
+            --gold-bright: #e5c382;
+            --forest: #1e3328;
+            --forest-light: #2c4a3b;
+            --paper: #f4efe6;
+            --slate: #8f9e96;
+            --danger: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--paper);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(23, 32, 28, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--gold);
+            letter-spacing: 0.05em;
+        }
+
+        .badge-admin {
+            background: rgba(200, 169, 110, 0.15);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .btn {
+            background: var(--forest-light);
+            color: var(--paper);
+            border: 1px solid var(--card-border);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--gold);
+            color: var(--bg-dark);
+            border-color: var(--gold);
+        }
+
+        .btn-danger {
+            background: rgba(231, 76, 60, 0.15);
+            color: var(--danger);
+            border-color: rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Auth Screen */
+        #auth-screen {
+            max-width: 400px;
+            margin: 4rem auto;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        #auth-screen h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        #auth-screen p {
+            color: var(--slate);
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--slate);
+            margin-bottom: 0.4rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            color: var(--paper);
+            font-family: 'DM Mono', monospace;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.82rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 1.25rem;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--slate);
+        }
+
+        .stat-card .value {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-top: 0.25rem;
+        }
+
+        .table-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            color: var(--paper);
+            font-size: 0.85rem;
+            width: 250px;
+        }
+
+        .table-container {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 0.9rem 1.2rem;
+            border-bottom: 1px solid rgba(200, 169, 110, 0.1);
+            font-size: 0.88rem;
+        }
+
+        th {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--slate);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        tr:hover td {
+            background: rgba(200, 169, 110, 0.04);
+        }
+
+        .room-code-tag {
+            font-family: 'DM Mono', monospace;
+            font-weight: 700;
+            color: var(--gold);
+            background: rgba(200, 169, 110, 0.15);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Modal / Replay Inspector */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 1.5rem;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            max-width: 850px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 1.3rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .letters-log {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-bottom: 1.5rem;
+            padding: 0.75rem;
+            background: var(--card-bg);
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+        }
+
+        .letter-chip {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+            padding: 0.2rem 0.4rem;
+            background: var(--forest-light);
+            border-radius: 4px;
+            color: var(--paper);
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .lb-row {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .lb-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .lb-player-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .lb-score-val {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .score-board-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            max-width: 240px;
+            margin: 0 auto 1rem;
+        }
+
+        .scoring-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 1.5px solid rgba(200, 169, 110, 0.5);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .scoring-cell.filled {
+            background: var(--forest);
+            color: var(--gold-bright);
+        }
+
+        .scoring-cell.word-highlighted {
+            background: var(--gold) !important;
+            color: var(--bg-dark) !important;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(200, 169, 110, 0.8);
+        }
+
+        .word-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: center;
+        }
+
+        .word-chip {
+            background: var(--forest);
+            color: var(--paper);
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: background 0.15s;
+        }
+
+        .word-chip:hover {
+            background: var(--forest-light);
+            border-color: var(--gold);
+        }
+
+        /* Definition Sub-Modal */
+        #def-modal {
+            z-index: 300;
+        }
+
+        .def-card {
+            background: var(--card-bg);
+            border: 1px solid var(--gold);
+            border-radius: 10px;
+            max-width: 450px;
+            width: 100%;
+            padding: 1.5rem;
+        }
+
+        .def-word {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .def-list {
+            max-height: 250px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--paper);
+        }
+
+        .def-meaning {
+            margin-bottom: 0.75rem;
+        }
+
+        .def-meaning strong {
+            color: var(--slate);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="brand">
+            <h1>Wordsworth</h1>
+            <span class="badge-admin">Private History</span>
+        </div>
+        <div id="header-actions" style="display: none;">
+            <button class="btn btn-danger" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Login Screen -->
+        <div id="auth-screen">
+            <h2>Admin Authentication</h2>
+            <p>Enter your secret admin password to access saved game end states.</p>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label for="admin-pass">Admin Password</label>
+                    <input type="password" id="admin-pass" placeholder="••••••••" required autofocus />
+                </div>
+                <button type="submit" class="btn" style="width: 100%; padding: 0.75rem;">Login to Dashboard</button>
+                <div id="auth-error" class="error-msg">Incorrect password. Please try again.</div>
+            </form>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard-screen" class="dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Total Games Recorded</div>
+                    <div class="value" id="stat-total-games">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Highest Score Recorded</div>
+                    <div class="value" id="stat-top-score">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Cumulative Players</div>
+                    <div class="value" id="stat-total-players">0</div>
+                </div>
+            </div>
+
+            <div class="table-header-row">
+                <h2 style="font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold);">Game Replays
+                    History</h2>
+                <input type="text" id="search-bar" class="search-input" placeholder="Filter by Room or Winner..."
+                    oninput="filterReplays()" />
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Room Code</th>
+                            <th>Players</th>
+                            <th>Winner</th>
+                            <th>Winner Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="replays-table-body">
+                        <!-- Rows injected dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Replay Inspector Modal -->
+    <div id="replay-modal" class="modal-backdrop">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-room-title">Room Replay</h3>
+                    <p id="modal-date-subtitle" style="font-size: 0.78rem; color: var(--slate);"></p>
+                </div>
+                <button class="btn" onclick="closeReplayModal()">Close</button>
+            </div>
+            <div class="modal-body">
+                <div
+                    style="margin-bottom: 0.5rem; font-size: 0.75rem; text-transform: uppercase; color: var(--slate); font-weight: 600;">
+                    Letters Called During Match:
+                </div>
+                <div id="letters-log-container" class="letters-log"></div>
+
+                <div style="margin-bottom: 0.75rem; font-size: 0.85rem; font-weight: 700; color: var(--gold);">
+                    Final Game End State & Player Boards:
+                </div>
+                <div id="modal-leaderboard" class="leaderboard-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Definition Sub-Modal -->
+    <div id="def-modal" class="modal-backdrop">
+        <div class="def-card">
+            <h3 id="def-word-title" class="def-word">WORD</h3>
+            <div id="def-body" class="def-list"></div>
+            <button class="btn" style="width: 100%; margin-top: 1rem;" onclick="closeDefModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        let authToken = sessionStorage.getItem('wordsworth_admin_token');
+        let allReplays = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (authToken) {
+                loadDashboard();
+            }
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('admin-pass').value;
+            const errEl = document.getElementById('auth-error');
+            errEl.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/admin/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    authToken = data.token;
+                    sessionStorage.setItem('wordsworth_admin_token', authToken);
+                    loadDashboard();
+                } else {
+                    errEl.style.display = 'block';
+                }
+            } catch (err) {
+                errEl.textContent = 'Server connection error.';
+                errEl.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('wordsworth_admin_token');
+            authToken = null;
+            document.getElementById('auth-screen').style.display = 'block';
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('header-actions').style.display = 'none';
+        }
+
+        async function loadDashboard() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('dashboard-screen').style.display = 'block';
+            document.getElementById('header-actions').style.display = 'block';
+
+            try {
+                const res = await fetch('/api/admin/replays', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+
+                const data = await res.json();
+                document.getElementById('stat-total-games').textContent = data.stats.totalGames;
+                document.getElementById('stat-top-score').textContent = data.stats.topScore + ' pt';
+                document.getElementById('stat-total-players').textContent = data.stats.totalPlayers;
+
+                allReplays = data.replays || [];
+                renderReplaysTable(allReplays);
+            } catch (err) {
+                console.error('Failed to load replays:', err);
+            }
+        }
+
+        function renderReplaysTable(replays) {
+            const tbody = document.getElementById('replays-table-body');
+            tbody.innerHTML = '';
+
+            if (!replays || replays.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--slate); padding:2rem;">No saved game replays found in database yet.</td></tr>';
+                return;
+            }
+
+            replays.forEach(r => {
+                const tr = document.createElement('tr');
+                const dateStr = new Date(r.created_at).toLocaleString();
+
+                tr.innerHTML = `
+          <td>${dateStr}</td>
+          <td><span class="room-code-tag">${r.room_id}</span></td>
+          <td>${r.player_count} player${r.player_count !== 1 ? 's' : ''}</td>
+          <td style="font-weight:600;">${r.winner_name}</td>
+          <td style="font-family:'DM Mono', monospace; font-weight:700; color:var(--gold);">${r.winner_score} pt</td>
+          <td class="actions-cell">
+            <button class="btn" onclick="inspectReplay('${r.replay_id}')">Inspect End State</button>
+            <button class="btn btn-danger" onclick="deleteReplay('${r.replay_id}')">Delete</button>
+          </td>
+        `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterReplays() {
+            const q = document.getElementById('search-bar').value.toLowerCase().trim();
+            if (!q) {
+                renderReplaysTable(allReplays);
+                return;
+            }
+            const filtered = allReplays.filter(r =>
+                r.room_id.toLowerCase().includes(q) ||
+                r.winner_name.toLowerCase().includes(q)
+            );
+            renderReplaysTable(filtered);
+        }
+
+        async function inspectReplay(replayId) {
+            try {
+                const res = await fetch(`/api/admin/replays/${replayId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (!res.ok) return alert('Failed to fetch replay details.');
+                const { replay } = await res.json();
+
+                document.getElementById('modal-room-title').textContent = `Room Code: ${replay.room_id}`;
+                document.getElementById('modal-date-subtitle').textContent = `Recorded at ${new Date(replay.created_at).toLocaleString()}`;
+
+                // Render called letters
+                const lettersLog = document.getElementById('letters-log-container');
+                lettersLog.innerHTML = '';
+                if (replay.called_letters && replay.called_letters.length > 0) {
+                    replay.called_letters.forEach(item => {
+                        const chip = document.createElement('span');
+                        chip.className = 'letter-chip';
+                        chip.textContent = `${item.letter} (${item.calledBy || 'Auto'})`;
+                        lettersLog.appendChild(chip);
+                    });
+                } else {
+                    lettersLog.textContent = 'No letters recorded.';
+                }
+
+                // Render leaderboard with interactive board tile highlighting & dictionary definition modals
+                renderLeaderboardModal(replay.leaderboard_data);
+
+                document.getElementById('replay-modal').classList.add('active');
+            } catch (err) {
+                console.error('Error fetching replay:', err);
+            }
+        }
+
+        function renderLeaderboardModal(leaderboard) {
+            const lbContainer = document.getElementById('modal-leaderboard');
+            lbContainer.innerHTML = '';
+
+            leaderboard.forEach((entry, idx) => {
+                const card = document.createElement('div');
+                card.className = 'lb-row';
+
+                let gridHtml = '<div class="score-board-grid">';
+                if (entry.board) {
+                    entry.board.forEach((cell, cellIdx) => {
+                        gridHtml += `<div class="scoring-cell${cell ? ' filled' : ''}" data-index="${cellIdx}">${cell || ''}</div>`;
+                    });
+                }
+                gridHtml += '</div>';
+
+                const wordsDiv = document.createElement('div');
+                wordsDiv.className = 'word-chips';
+
+                if (entry.words && entry.words.length > 0) {
+                    entry.words.forEach(w => {
+                        const chip = document.createElement('button');
+                        chip.className = 'word-chip';
+                        chip.innerHTML = `${w.word.toUpperCase()} <span style="opacity:0.7; font-size:0.7rem;">+${w.score}</span>`;
+
+                        const positions = Array.isArray(w.positions) ? w.positions : [];
+                        const gridEl = card;
+
+                        chip.addEventListener('mouseenter', () => highlightGridCells(card, positions));
+                        chip.addEventListener('mouseleave', () => clearGridHighlights(card));
+                        chip.addEventListener('click', () => openDefModal(w.word, w.meanings));
+
+                        wordsDiv.appendChild(chip);
+                    });
+                } else {
+                    wordsDiv.innerHTML = '<span style="font-size:0.8rem; color:var(--slate); font-style:italic;">No valid words found</span>';
+                }
+
+                card.innerHTML = `
+          <div class="lb-row-header">
+            <div>
+              <span style="color:var(--gold); font-weight:700; margin-right:0.5rem;">#${idx + 1}</span>
+              <span class="lb-player-name">${entry.name}</span>
+            </div>
+            <div class="lb-score-val">${entry.score} pt${entry.score !== 1 ? 's' : ''}</div>
+          </div>
+          ${gridHtml}
+        `;
+                card.appendChild(wordsDiv);
+                lbContainer.appendChild(card);
+            });
+        }
+
+        function highlightGridCells(parentCard, positions) {
+            clearGridHighlights(parentCard);
+            positions.forEach(pos => {
+                const cell = parentCard.querySelector(`.scoring-cell[data-index="${pos}"]`);
+                if (cell) cell.classList.add('word-highlighted');
+            });
+        }
+
+        function clearGridHighlights(parentCard) {
+            parentCard.querySelectorAll('.scoring-cell.word-highlighted').forEach(cell => {
+                cell.classList.remove('word-highlighted');
+            });
+        }
+
+        function openDefModal(word, meanings) {
+            document.getElementById('def-word-title').textContent = word.toUpperCase();
+            const body = document.getElementById('def-body');
+            body.innerHTML = '';
+
+            if (!meanings || meanings.length === 0) {
+                body.innerHTML = '<div style="color:var(--slate);">No dictionary definition found.</div>';
+            } else {
+                meanings.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'def-meaning';
+                    div.innerHTML = `<strong>${m.partOfSpeech || 'Definition'}</strong><ul>${m.definitions.map(d => `<li>${d}</li>`).join('')}</ul>`;
+                    body.appendChild(div);
+                });
+            }
+
+            document.getElementById('def-modal').classList.add('active');
+        }
+
+        function closeDefModal() {
+            document.getElementById('def-modal').classList.remove('active');
+        }
+
+        function closeReplayModal() {
+            document.getElementById('replay-modal').classList.remove('active');
+        }
+
+        async function deleteReplay(replayId) {
+            if (!confirm('Are you sure you want to delete this game replay record from the database?')) return;
+            try {
+                const res = await fetch(`/api/admin/replays/${replayId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    loadDashboard();
+                } else {
+                    alert('Failed to delete replay record.');
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+            }
+        }
+    </script>
+</body>
+
+</html>

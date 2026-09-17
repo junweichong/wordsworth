@@ -1,10 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const db = require('./database');
 
 const app = express();
+app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*' },
@@ -13,6 +16,51 @@ const io = new Server(server, {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Admin Routes & Authorization ──────────────────────────────
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+
+function requireAdminAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token === ADMIN_PASSWORD) {
+    return next();
+  }
+  return res.status(401).json({ error: 'Unauthorized: Invalid Admin Password' });
+}
+
+// Serve admin portal
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Admin APIs
+app.post('/api/admin/verify', (req, res) => {
+  const { password } = req.body;
+  if (password === ADMIN_PASSWORD) {
+    return res.json({ success: true, token: ADMIN_PASSWORD });
+  }
+  return res.status(401).json({ success: false, message: 'Incorrect password.' });
+});
+
+app.get('/api/admin/replays', requireAdminAuth, (req, res) => {
+  const replays = db.getAllReplays();
+  const stats = db.getStats();
+  res.json({ replays, stats });
+});
+
+app.get('/api/admin/replays/:id', requireAdminAuth, (req, res) => {
+  const replay = db.getReplayById(req.params.id);
+  if (!replay) return res.status(404).json({ error: 'Replay not found' });
+  res.json({ replay });
+});
+
+app.delete('/api/admin/replays/:id', requireAdminAuth, (req, res) => {
+  const success = db.deleteReplay(req.params.id);
+  if (!success) return res.status(400).json({ error: 'Could not delete replay' });
+  res.json({ success: true });
+});
+
 
 // ── In-memory store ──────────────────────────────────────────────
 const rooms = {};
@@ -903,6 +951,13 @@ function scoreAllAndEnd(roomId, room) {
 
   io.to(roomId).emit('game_over', { leaderboard });
   console.log(`Game over in room ${roomId}`);
+
+  // Save end state to SQLite database without affecting gameplay
+  db.saveReplay({
+    roomId,
+    calledLetters: room.calledLetters || [],
+    leaderboard
+  });
 }
 
 function startCallTimer(roomId, room, nextId) {
