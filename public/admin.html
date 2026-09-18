@@ -485,7 +485,6 @@
     <header>
         <div class="brand">
             <h1>Wordsworth</h1>
-            <span class="badge-admin">Private History</span>
         </div>
         <div id="header-actions" style="display: none;">
             <button class="btn btn-danger" onclick="logout()">Logout</button>
@@ -501,7 +500,7 @@
             <form onsubmit="handleLogin(event)">
                 <div class="input-group">
                     <label for="admin-pass">Admin Password</label>
-                    <input type="password" id="admin-pass" placeholder="••••••••" required autofocus />
+                    <input type="password" id="admin-pass" placeholder=" " required autofocus />
                 </div>
                 <button type="submit" class="btn" style="width: 100%; padding: 0.75rem;">Login to Dashboard</button>
                 <div id="auth-error" class="error-msg">Incorrect password. Please try again.</div>
@@ -510,26 +509,12 @@
 
         <!-- Dashboard Screen -->
         <div id="dashboard-screen" class="dashboard">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="label">Total Games Recorded</div>
-                    <div class="value" id="stat-total-games">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">Highest Score Recorded</div>
-                    <div class="value" id="stat-top-score">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">Cumulative Players</div>
-                    <div class="value" id="stat-total-players">0</div>
-                </div>
-            </div>
+
 
             <div class="table-header-row">
-                <h2 style="font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold);">Game Replays
-                    History</h2>
-                <input type="text" id="search-bar" class="search-input" placeholder="Filter by Room or Winner..."
-                    oninput="filterReplays()" />
+                <h2
+                    style="font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); margin-bottom: 1rem;">
+                    Game History</h2>
             </div>
 
             <div class="table-container">
@@ -537,10 +522,7 @@
                     <thead>
                         <tr>
                             <th>Date & Time</th>
-                            <th>Room Code</th>
-                            <th>Players</th>
-                            <th>Winner</th>
-                            <th>Winner Score</th>
+                            <th>Host Name</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -646,9 +628,6 @@
                 }
 
                 const data = await res.json();
-                document.getElementById('stat-total-games').textContent = data.stats.totalGames;
-                document.getElementById('stat-top-score').textContent = data.stats.topScore + ' pt';
-                document.getElementById('stat-total-players').textContent = data.stats.totalPlayers;
 
                 allReplays = data.replays || [];
                 renderReplaysTable(allReplays);
@@ -662,20 +641,18 @@
             tbody.innerHTML = '';
 
             if (!replays || replays.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--slate); padding:2rem;">No saved game replays found in database yet.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--slate); padding:2rem;">No saved game replays found in database yet.</td></tr>';
                 return;
             }
 
             replays.forEach(r => {
                 const tr = document.createElement('tr');
                 const dateStr = new Date(r.created_at).toLocaleString();
+                const hostName = r.host_name || r.winner_name || 'Unknown';
 
                 tr.innerHTML = `
           <td>${dateStr}</td>
-          <td><span class="room-code-tag">${r.room_id}</span></td>
-          <td>${r.player_count} player${r.player_count !== 1 ? 's' : ''}</td>
-          <td style="font-weight:600;">${r.winner_name}</td>
-          <td style="font-family:'DM Mono', monospace; font-weight:700; color:var(--gold);">${r.winner_score} pt</td>
+          <td style="font-weight:600; color:var(--paper);">${hostName}</td>
           <td class="actions-cell">
             <button class="btn" onclick="inspectReplay('${r.replay_id}')">Inspect End State</button>
             <button class="btn btn-danger" onclick="deleteReplay('${r.replay_id}')">Delete</button>
@@ -685,18 +662,6 @@
             });
         }
 
-        function filterReplays() {
-            const q = document.getElementById('search-bar').value.toLowerCase().trim();
-            if (!q) {
-                renderReplaysTable(allReplays);
-                return;
-            }
-            const filtered = allReplays.filter(r =>
-                r.room_id.toLowerCase().includes(q) ||
-                r.winner_name.toLowerCase().includes(q)
-            );
-            renderReplaysTable(filtered);
-        }
 
         async function inspectReplay(replayId) {
             try {

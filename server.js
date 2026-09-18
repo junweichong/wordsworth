@@ -43,20 +43,20 @@ app.post('/api/admin/verify', (req, res) => {
   return res.status(401).json({ success: false, message: 'Incorrect password.' });
 });
 
-app.get('/api/admin/replays', requireAdminAuth, (req, res) => {
-  const replays = db.getAllReplays();
-  const stats = db.getStats();
+app.get('/api/admin/replays', requireAdminAuth, async (req, res) => {
+  const replays = await db.getAllReplays();
+  const stats = await db.getStats();
   res.json({ replays, stats });
 });
 
-app.get('/api/admin/replays/:id', requireAdminAuth, (req, res) => {
-  const replay = db.getReplayById(req.params.id);
+app.get('/api/admin/replays/:id', requireAdminAuth, async (req, res) => {
+  const replay = await db.getReplayById(req.params.id);
   if (!replay) return res.status(404).json({ error: 'Replay not found' });
   res.json({ replay });
 });
 
-app.delete('/api/admin/replays/:id', requireAdminAuth, (req, res) => {
-  const success = db.deleteReplay(req.params.id);
+app.delete('/api/admin/replays/:id', requireAdminAuth, async (req, res) => {
+  const success = await db.deleteReplay(req.params.id);
   if (!success) return res.status(400).json({ error: 'Could not delete replay' });
   res.json({ success: true });
 });
@@ -953,8 +953,11 @@ function scoreAllAndEnd(roomId, room) {
   console.log(`Game over in room ${roomId}`);
 
   // Save end state to SQLite database without affecting gameplay
+  const hostPlayer = room.players.find(p => p.id === room.hostId);
+  const hostName = hostPlayer ? hostPlayer.name : (leaderboard[0]?.name || 'Unknown');
   db.saveReplay({
     roomId,
+    hostName,
     calledLetters: room.calledLetters || [],
     leaderboard
   });
