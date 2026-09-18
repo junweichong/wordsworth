@@ -535,6 +535,8 @@
       tot.textContent = totalTurns;
 
       if (state.spectator) {
+        badge.className = 'turn-badge';
+        nameEl.textContent = playerName ? `${playerName}'s turn` : 'Waiting...';
         callPanel.classList.remove('visible');
         callStatus.textContent = 'Spectator mode — watching the players.';
         alphabetGrid.classList.add('inactive');
