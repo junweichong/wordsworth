@@ -91,8 +91,16 @@
           <input type="checkbox" id="timer-off-cb" onchange="toggleTimerInput(this)"> No Timer
         </label>
       </div>
-      <label style="font-size:0.8rem;color:var(--ink);display:flex;align-items:center;gap:0.35rem;">
+      <label class="host-option" style="font-size:0.8rem;color:var(--ink);display:flex;align-items:center;gap:0.35rem;">
         <input type="checkbox" id="spectator-host-cb"> Spectator mode (host does not play)
+      </label>
+      <label class="host-option" style="font-size:0.8rem;color:var(--ink);display:flex;align-items:center;gap:0.35rem;">
+        <input type="checkbox" id="auto-score-host-cb" onchange="toggleAutoScoreInput(this)"> Calculate scores automatically
+      </label>
+      <label style="font-size:0.8rem;color:var(--ink);display:flex;align-items:center;gap:0.25rem;">
+        <span>End game search (seconds):</span>
+        <input type="number" id="manual-search-duration-input" value="120" min="60" max="600"
+          style="padding:0.35rem 0.45rem;border-radius:4px;font-family:'DM Mono',monospace;background:var(--paper);border:1.5px solid rgba(200,169,110,0.5);width:78px;">
       </label>
       <button class="btn btn-forest" onclick="startGame()" id="btn-start" style="margin-top:0.25rem;">Start
         Game</button>
@@ -167,6 +175,42 @@
     <div class="board-wrap">
       <p class="board-label">Your board — tap an empty cell</p>
       <div class="board" id="game-board"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+     MANUAL SCORING SCREEN
+══════════════════════════════════════════════════════ -->
+  <div id="screen-manual-scoring" class="screen">
+    <div class="manual-header">
+      <div>
+        <p class="definition-kicker">Final word hunt</p>
+        <h1>Find your words</h1>
+        <p>Select letters in a row or column, then confirm the word.</p>
+      </div>
+      <div class="manual-timer" id="manual-timer">2:00</div>
+    </div>
+
+    <div class="manual-layout">
+      <main class="manual-board-panel">
+        <div class="manual-selection-bar" aria-live="polite">
+          <span id="manual-selection-word">Tap a letter to begin</span>
+          <button class="btn btn-secondary manual-clear-btn" type="button" onclick="clearManualSelection()">Clear</button>
+        </div>
+        <div class="manual-board" id="manual-board" aria-label="Your final word board"></div>
+        <div class="manual-actions">
+          <button class="btn btn-forest" id="manual-confirm-btn" type="button" onclick="confirmManualWord()" disabled>Confirm word</button>
+          <button class="btn btn-secondary manual-ready-btn" id="manual-ready-btn" type="button" onclick="toggleManualReady()">I'm ready</button>
+          <p id="manual-ready-status" class="manual-ready-status" aria-live="polite"></p>
+          <p id="manual-feedback" class="manual-feedback" aria-live="polite"></p>
+        </div>
+      </main>
+
+      <aside class="manual-claims-panel">
+        <div class="manual-score-label">Your score<strong id="manual-score">0</strong></div>
+        <h2>Words found</h2>
+        <div id="manual-claims-list" class="manual-claims-list"></div>
+      </aside>
     </div>
   </div>
 
@@ -257,7 +301,8 @@
       placementStatus: [],
       grid: Array(25).fill(''),   // player's own 5x5 board
       selectedCell: null,
-      placedThisTurn: false,
+        placedThisTurn: false,
+        manualReady: false,
       finalTurnActive: false,
     };
 
@@ -345,23 +390,34 @@
         timer = parseInt(document.getElementById('timer-input').value);
         if (isNaN(timer) || timer < 1) timer = 30;
       }
+      let manualSearchDuration = parseInt(document.getElementById('manual-search-duration-input').value);
+      if (isNaN(manualSearchDuration) || manualSearchDuration < 60) manualSearchDuration = 120;
+      manualSearchDuration = Math.min(manualSearchDuration, 600);
       socket.emit('start_game', {
         turnTimer: timer,
-        spectatorHost: document.getElementById('spectator-host-cb').checked
+        spectatorHost: document.getElementById('spectator-host-cb').checked,
+        automaticScoring: document.getElementById('auto-score-host-cb').checked,
+        manualSearchDuration
       });
     }
 
     function toggleTimerInput(cb) {
       const input = document.getElementById('timer-input');
       if (cb.checked) {
-        input.value = '';
+        if (input.value.trim()) input.dataset.lastValue = input.value;
         input.disabled = true;
         input.style.opacity = '0.5';
       } else {
-        input.value = '30';
+        input.value = input.dataset.lastValue || input.value || '30';
         input.disabled = false;
         input.style.opacity = '1';
       }
+    }
+
+    function toggleAutoScoreInput(cb) {
+      const input = document.getElementById('manual-search-duration-input');
+      input.disabled = cb.checked;
+      input.style.opacity = cb.checked ? '0.5' : '1';
     }
 
     function renderPlayerListItems(listId) {
@@ -537,8 +593,11 @@
       if (state.spectator) {
         badge.className = 'turn-badge';
         nameEl.textContent = playerName ? `${playerName}'s turn` : 'Waiting...';
-        callPanel.classList.remove('visible');
-        callStatus.textContent = 'Spectator mode — watching the players.';
+        callPanel.classList.add('visible');
+        callStatus.innerHTML = playerName
+          ? `<strong>${playerName}</strong> is choosing a letter...`
+          : 'Spectator mode — watching the players.';
+        buildAlphabet();
         alphabetGrid.classList.add('inactive');
         return;
       }
@@ -622,6 +681,25 @@
       }
     }
 
+    function renderManualProgress(progress = state.manualProgress) {
+      const panel = document.getElementById('action-status-panel');
+      const list = document.getElementById('action-status-list');
+      if (!panel || !list) return;
+      panel.style.display = 'block';
+      panel.querySelector('h2').textContent = 'Word hunt standings';
+      list.innerHTML = '';
+
+      progress.forEach((player, index) => {
+        const li = document.createElement('li');
+        li.className = 'manual-progress-row';
+        li.innerHTML = `
+          <span><b class="manual-progress-rank">${index + 1}</b>${player.name}${player.playerId === state.playerId ? ' (you)' : ''}</span>
+          <strong><span>${player.words} word${player.words === 1 ? '' : 's'}</span><span>${player.score} pt${player.score === 1 ? '' : 's'}</span><span>${player.ready ? 'Ready' : 'Searching'}</span></strong>
+        `;
+        list.appendChild(li);
+      });
+    }
+
     function buildAlphabet() {
       const grid = document.getElementById('alphabet-grid');
       grid.classList.remove('inactive');
@@ -657,6 +735,169 @@
     // ═══════════════════════════════════════════════════════
     // Results
     // ═══════════════════════════════════════════════════════
+    let manualTimerInterval = null;
+
+    function startManualScoring(deadline, claims = [], ready = false) {
+      state.phase = 'manual_scoring';
+      state.manualDeadline = deadline;
+      state.manualSelected = [];
+      state.manualClaims = claims;
+      state.manualScore = claims.reduce((total, claim) => total + claim.score, 0);
+      state.manualReady = ready;
+      showScreen('manual-scoring');
+      const readyButton = document.getElementById('manual-ready-btn');
+      readyButton.disabled = false;
+      readyButton.textContent = state.manualReady ? 'Unready' : "I'm ready";
+      document.getElementById('manual-ready-status').textContent = state.manualReady ? 'Ready. Click Unready to keep searching.' : '';
+      renderManualBoard();
+      renderManualClaims();
+      clearManualSelection();
+      clearInterval(manualTimerInterval);
+      updateManualTimer();
+      manualTimerInterval = setInterval(updateManualTimer, 250);
+    }
+
+    function toggleManualReady() {
+      if (state.phase !== 'manual_scoring') return;
+      state.manualReady = !state.manualReady;
+      const button = document.getElementById('manual-ready-btn');
+      button.textContent = state.manualReady ? 'Unready' : "I'm ready";
+      document.getElementById('manual-ready-status').textContent = state.manualReady
+        ? 'Ready. Click Unready to keep searching.'
+        : '';
+      socket.emit('manual_ready', { ready: state.manualReady });
+    }
+
+    function updateManualTimer() {
+      const seconds = Math.max(0, Math.ceil((state.manualDeadline - Date.now()) / 1000));
+      const minutes = Math.floor(seconds / 60);
+      const remainder = String(seconds % 60).padStart(2, '0');
+      document.getElementById('manual-timer').textContent = `${minutes}:${remainder}`;
+      if (seconds === 0) clearInterval(manualTimerInterval);
+    }
+
+    function getManualPath(first, second) {
+      const firstRow = Math.floor(first / 5);
+      const secondRow = Math.floor(second / 5);
+      const firstColumn = first % 5;
+      const secondColumn = second % 5;
+      const path = [];
+
+      if (firstRow === secondRow) {
+        const step = secondColumn >= firstColumn ? 1 : -1;
+        for (let column = firstColumn; ; column += step) {
+          path.push(firstRow * 5 + column);
+          if (column === secondColumn) break;
+        }
+      } else if (firstColumn === secondColumn) {
+        const step = secondRow >= firstRow ? 1 : -1;
+        for (let row = firstRow; ; row += step) {
+          path.push(row * 5 + firstColumn);
+          if (row === secondRow) break;
+        }
+      }
+
+      return path.length <= 5 ? path : [];
+    }
+
+    function selectManualCell(index) {
+      if (state.phase !== 'manual_scoring' || state.manualReady) return;
+      if (!state.grid[index]) return;
+      if (state.manualSelected.includes(index)) {
+        if (state.manualSelected.length === 1) {
+          state.manualSelected = [];
+        } else if (index === state.manualSelected[0]) {
+          state.manualSelected = state.manualSelected.slice(1);
+        } else if (index === state.manualSelected[state.manualSelected.length - 1]) {
+          state.manualSelected = state.manualSelected.slice(0, -1);
+        } else {
+          toast('You cannot remove a letter from the middle of a word.');
+        }
+        renderManualBoard();
+        updateManualSelectionBar();
+        return;
+      }
+
+      if (state.manualSelected.length === 0) {
+        state.manualSelected = [index];
+      } else if (state.manualSelected.length === 1) {
+        const path = getManualPath(state.manualSelected[0], index);
+        state.manualSelected = path.length ? path : [index];
+      } else if (index === state.manualSelected[state.manualSelected.length - 1]) {
+        state.manualSelected.pop();
+      } else {
+        const first = state.manualSelected[0];
+        const last = state.manualSelected[state.manualSelected.length - 1];
+        const pathFromFirst = getManualPath(first, index);
+        const pathFromLast = getManualPath(last, index);
+        if (pathFromLast.length === 2) {
+          state.manualSelected = state.manualSelected.concat(index);
+        } else if (pathFromFirst.length === 2) {
+          state.manualSelected = [index].concat(state.manualSelected);
+        } else {
+          state.manualSelected = [index];
+        }
+      }
+
+      renderManualBoard();
+      updateManualSelectionBar();
+    }
+
+    function renderManualBoard() {
+      const board = document.getElementById('manual-board');
+      if (!board) return;
+      board.innerHTML = '';
+      const foundPositions = new Set(state.manualClaims.flatMap(claim => claim.positions));
+      state.grid.forEach((letter, index) => {
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'manual-cell';
+        if (foundPositions.has(index)) cell.classList.add('manual-found');
+        if (state.manualSelected.includes(index)) cell.classList.add('manual-selected');
+        cell.textContent = letter || '';
+        cell.setAttribute('aria-label', `Letter ${letter || 'empty'}, cell ${index + 1}`);
+        cell.addEventListener('click', () => selectManualCell(index));
+        board.appendChild(cell);
+      });
+    }
+
+    function updateManualSelectionBar() {
+      const word = state.manualSelected.map(index => state.grid[index] || '').join('');
+      document.getElementById('manual-selection-word').textContent = word || 'Tap a letter to begin';
+      document.getElementById('manual-confirm-btn').disabled = state.manualSelected.length < 3;
+    }
+
+    function clearManualSelection() {
+      state.manualSelected = [];
+      renderManualBoard();
+      updateManualSelectionBar();
+    }
+
+    function confirmManualWord() {
+      if (state.manualReady || state.manualSelected.length < 3) return;
+      document.getElementById('manual-confirm-btn').disabled = true;
+      socket.emit('claim_word', {
+        start: state.manualSelected[0],
+        end: state.manualSelected[state.manualSelected.length - 1]
+      });
+    }
+
+    function renderManualClaims() {
+      const list = document.getElementById('manual-claims-list');
+      list.innerHTML = '';
+      if (!state.manualClaims.length) {
+        list.innerHTML = '<p class="manual-empty">No words claimed yet.</p>';
+        return;
+      }
+      state.manualClaims.forEach(claim => {
+        const item = document.createElement('div');
+        item.className = 'manual-claim';
+        item.innerHTML = `<strong>${claim.word.toUpperCase()}</strong><span>+${claim.score}</span>`;
+        list.appendChild(item);
+      });
+      document.getElementById('manual-score').textContent = state.manualScore;
+    }
+
     function renderDefinitionModal(word, meanings) {
       const modal = document.getElementById('definition-modal');
       const title = document.getElementById('definition-word');
@@ -767,15 +1008,15 @@
             chip.className = 'word-chip';
             chip.style.display = 'inline-flex';
             chip.style.alignItems = 'center';
-            chip.style.background = 'var(--forest)';
-            chip.style.color = 'var(--paper)';
+            chip.style.background = w.manual === true ? 'var(--gold)' : 'var(--forest)';
+            chip.style.color = w.manual === true ? 'var(--ink)' : 'var(--paper)';
             chip.style.borderRadius = '3px';
             chip.style.padding = '0.25rem 0.6rem';
             chip.style.fontSize = '0.82rem';
             chip.textContent = w.word.toUpperCase();
 
             const score = document.createElement('span');
-            score.textContent = `+${w.score}`;
+            score.textContent = w.manual === false ? `+${w.score} auto` : `+${w.score}`;
             score.style.opacity = '0.7';
             score.style.fontSize = '0.72rem';
             score.style.marginLeft = '0.25rem';
@@ -874,6 +1115,12 @@
         selectedCell: null,
         placedThisTurn: false,
         finalTurnActive: false,
+        manualSelected: [],
+        manualClaims: [],
+        manualScore: 0,
+        manualDeadline: null,
+          manualProgress: [],
+          manualReady: false,
       };
       showScreen('landing');
     }
@@ -984,6 +1231,17 @@
               document.getElementById('call-panel').classList.remove('visible');
             }
           }
+        }
+      } else if (state.phase === 'manual_scoring') {
+        state.manualProgress = data.manualProgress || [];
+        if (state.spectator) {
+          showScreen('game');
+          document.getElementById('screen-game').classList.add('spectator-mode');
+          document.getElementById('call-panel').classList.remove('visible');
+          document.getElementById('turn-player-name').textContent = 'Word hunt';
+          renderManualProgress();
+        } else {
+          startManualScoring(data.manualScoringDeadline, data.manualClaims || [], data.manualReady === true);
         }
       } else if (state.phase === 'scoring' && data.leaderboard) {
         renderResults(data.leaderboard);
@@ -1143,6 +1401,46 @@
       }
     });
 
+    socket.on('manual_scoring_started', ({ deadline, progress }) => {
+      state.manualProgress = progress || [];
+      if (state.spectator) {
+        state.phase = 'manual_scoring';
+        showScreen('game');
+        document.getElementById('screen-game').classList.add('spectator-mode');
+        document.getElementById('call-panel').classList.remove('visible');
+        document.getElementById('turn-player-name').textContent = 'Word hunt';
+        document.getElementById('call-status').textContent = 'Watching the players find words...';
+        renderManualProgress();
+      } else {
+        state.grid = state.grid.slice();
+        startManualScoring(deadline);
+      }
+    });
+
+    socket.on('manual_scoring_progress', ({ progress }) => {
+      state.manualProgress = progress || [];
+      if (state.spectator && state.phase === 'manual_scoring') {
+        renderManualProgress();
+      }
+    });
+
+    socket.on('word_claim_result', ({ valid, message, word, total }) => {
+      const feedback = document.getElementById('manual-feedback');
+      if (!valid) {
+        feedback.textContent = message;
+        feedback.className = 'manual-feedback invalid';
+        document.getElementById('manual-confirm-btn').disabled = state.manualSelected.length < 3;
+        return;
+      }
+
+      state.manualClaims.push(word);
+      state.manualScore = total;
+      feedback.textContent = `${word.word.toUpperCase()} is valid: +${word.score} points`;
+      feedback.className = 'manual-feedback valid';
+      renderManualClaims();
+      clearManualSelection();
+    });
+
     socket.on('letter_called', ({ letter, calledBy, calledLetters, turnsLeft, turnTimer }) => {
       state.calledLetters = calledLetters;
       state.currentLetter = letter;
@@ -1193,6 +1491,7 @@
 
     socket.on('game_over', ({ leaderboard }) => {
       state.finalTurnActive = false;
+      clearInterval(manualTimerInterval);
       clearSession();
       renderResults(leaderboard);
     });

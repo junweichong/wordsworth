@@ -223,14 +223,20 @@ io.on('connection', (socket) => {
         words: null,
         spectator: false
       }],
-      phase: 'lobby',       // lobby | playing | scoring
+      phase: 'lobby',       // lobby | playing | manual_scoring | scoring
       turnOrder: [],
       currentTurnIndex: 0,
       calledLetters: [],    // [{letter, calledBy}]
       lettersLeft: 25,
       activeTurnId: null,
       finalTurnStarted: false,
-      finalTurnSelections: new Map()
+      finalTurnSelections: new Map(),
+      automaticScoring: false,
+      manualClaims: new Map(),
+      manualReady: new Set(),
+      manualSearchDuration: 120,
+      manualScoringTimeout: null,
+      manualScoringDeadline: null
     };
 
     socket.join(roomId);
@@ -302,6 +308,11 @@ io.on('connection', (socket) => {
       placedThisTurn: hasPlacedThisTurn,
       letterCalledThisTurn: room.letterCalledThisTurn || false,
       finalTurnStarted: room.finalTurnStarted || false,
+      manualScoringDeadline: room.phase === 'manual_scoring' ? room.manualScoringDeadline : null,
+      manualClaims: room.phase === 'manual_scoring' ? (room.manualClaims.get(player.id) || []) : [],
+      manualProgress: room.phase === 'manual_scoring' ? getManualProgress(room) : [],
+      manualReady: room.phase === 'manual_scoring' && room.manualReady.has(player.id),
+      automaticScoring: room.automaticScoring === true,
       spectator: !!player.spectator,
       leaderboard: room.phase === 'scoring'
         ? activePlayers(room)
@@ -368,6 +379,51 @@ io.on('connection', (socket) => {
     socket.emit('room_joined', { roomId, playerId, playerName });
     io.to(roomId).emit('room_state', sanitiseRoom(room));
     console.log(`${playerName} (${playerId}) joined room ${roomId}`);
+  });
+
+  socket.on('claim_word', ({ start, end }) => {
+    const roomId = socket.data.roomId;
+    const room = rooms[roomId];
+    if (!room || room.phase !== 'manual_scoring') return;
+
+    const player = room.players.find(currentPlayer => currentPlayer.id === socket.data.playerId);
+    if (!player || player.spectator) return;
+
+    const claim = validateWordClaim(player, start, end);
+    if (claim.error) {
+      return socket.emit('word_claim_result', { valid: false, message: claim.error });
+    }
+
+    const claims = room.manualClaims.get(player.id) || [];
+    const claimKey = claim.positions.join(',');
+    if (claims.some(existing => existing.positions.join(',') === claimKey)) {
+      return socket.emit('word_claim_result', { valid: false, message: 'You already found that word.' });
+    }
+
+    claims.push(claim);
+    room.manualClaims.set(player.id, claims);
+    const score = claims.reduce((total, word) => total + word.score, 0);
+    socket.emit('word_claim_result', { valid: true, word: claim, total: score });
+    io.to(roomId).emit('manual_scoring_progress', { progress: getManualProgress(room) });
+  });
+
+  socket.on('manual_ready', ({ ready = true } = {}) => {
+    const roomId = socket.data.roomId;
+    const room = rooms[roomId];
+    if (!room || room.phase !== 'manual_scoring') return;
+
+    const player = room.players.find(currentPlayer => currentPlayer.id === socket.data.playerId);
+    if (!player || player.spectator) return;
+    if (ready) {
+      room.manualReady.add(player.id);
+    } else {
+      room.manualReady.delete(player.id);
+    }
+    io.to(roomId).emit('manual_scoring_progress', { progress: getManualProgress(room) });
+
+    if (ready && activePlayers(room).every(activePlayer => room.manualReady.has(activePlayer.id))) {
+      finishManualScoring(roomId, room);
+    }
   });
 
   // REJOIN ROOM (Session Restore)
@@ -530,6 +586,11 @@ io.on('connection', (socket) => {
   socket.on('start_game', (data) => {
     const turnTimer = data && data.turnTimer ? data.turnTimer : 0;
     const spectatorHost = data && data.spectatorHost === true;
+    const automaticScoring = data && data.automaticScoring === true;
+    const requestedManualSearchDuration = Number.parseInt(data?.manualSearchDuration, 10);
+    const manualSearchDuration = Number.isFinite(requestedManualSearchDuration)
+      ? Math.min(Math.max(requestedManualSearchDuration, 60), 600)
+      : 120;
     const roomId = socket.data.roomId;
     const room = rooms[roomId];
     if (!room) return;
@@ -548,6 +609,13 @@ io.on('connection', (socket) => {
     room.turnTimer = turnTimer;
     room.finalTurnStarted = false;
     room.finalTurnSelections = new Map();
+    room.automaticScoring = automaticScoring;
+    room.manualSearchDuration = manualSearchDuration;
+    room.manualClaims = new Map();
+    room.manualReady = new Set();
+    room.manualScoringDeadline = null;
+    if (room.manualScoringTimeout) clearTimeout(room.manualScoringTimeout);
+    room.manualScoringTimeout = null;
     if (room.turnTimeout) clearTimeout(room.turnTimeout);
     if (room.finalTurnTimeout) clearTimeout(room.finalTurnTimeout);
 
@@ -574,7 +642,8 @@ io.on('connection', (socket) => {
       },
       totalTurns: room.lettersLeft,
       turnTimer: room.turnTimer,
-      spectatorHost
+      spectatorHost,
+      automaticScoring
     });
 
     startCallTimer(roomId, room, room.turnOrder[0]);
@@ -807,7 +876,101 @@ function finishFinalTurnAndScore(roomId, room) {
     player.board = board;
     room.finalTurnSelections.set(player.id, fallbackLetter);
   });
+  if (room.automaticScoring) {
+    scoreAllAndEnd(roomId, room);
+  } else {
+    startManualScoring(roomId, room);
+  }
+}
+
+function getClaimPositions(start, end) {
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end > 24) return null;
+  const startRow = Math.floor(start / 5);
+  const endRow = Math.floor(end / 5);
+  const startColumn = start % 5;
+  const endColumn = end % 5;
+  const positions = [];
+
+  if (startRow === endRow && endColumn >= startColumn) {
+    for (let column = startColumn; column <= endColumn; column++) positions.push(startRow * 5 + column);
+  } else if (startColumn === endColumn && endRow >= startRow) {
+    for (let row = startRow; row <= endRow; row++) positions.push(row * 5 + startColumn);
+  } else {
+    return null;
+  }
+
+  return positions.length >= 3 && positions.length <= 5 ? positions : null;
+}
+
+function startManualScoring(roomId, room) {
+  room.phase = 'manual_scoring';
+  room.manualClaims = new Map();
+  if (room.manualScoringTimeout) clearTimeout(room.manualScoringTimeout);
+  const duration = room.manualSearchDuration || 120;
+  room.manualScoringDeadline = Date.now() + duration * 1000;
+  room.manualScoringTimeout = setTimeout(() => finishManualScoring(roomId, room), duration * 1000);
+
+  io.to(roomId).emit('manual_scoring_started', {
+    duration,
+    deadline: room.manualScoringDeadline,
+    progress: getManualProgress(room)
+  });
+}
+
+function getManualProgress(room) {
+  return activePlayers(room)
+    .map(player => {
+      const words = room.manualClaims.get(player.id) || [];
+      return {
+        playerId: player.id,
+        name: player.name,
+        words: words.length,
+        score: words.reduce((total, word) => total + word.score, 0),
+        ready: room.manualReady.has(player.id)
+      };
+    })
+    .sort((a, b) => b.score - a.score || b.words - a.words || a.name.localeCompare(b.name));
+}
+
+function finishManualScoring(roomId, room) {
+  if (room.phase !== 'manual_scoring') return;
+  room.manualScoringTimeout = null;
+  room.manualScoringDeadline = null;
+
+  activePlayers(room).forEach(player => {
+    const claimed = new Map(
+      (room.manualClaims.get(player.id) || []).map(word => [word.positions.join(','), word])
+    );
+    const allWords = scoreBoard(player.board || Array(25).fill('')).words;
+    const words = allWords.map(word => {
+      const manualWord = claimed.get(word.positions.join(','));
+      return manualWord
+        ? { ...word, score: word.score, manual: true }
+        : { ...word, score: 1, manual: false };
+    });
+    player.words = words;
+    player.score = words.reduce((total, word) => total + word.score, 0);
+  });
+
   scoreAllAndEnd(roomId, room);
+}
+
+function validateWordClaim(player, start, end) {
+  const positions = getClaimPositions(start, end);
+  if (!positions) return { error: 'Select 3 to 5 letters in one row or column.' };
+  const board = Array.isArray(player.board) ? player.board : [];
+  if (positions.some(position => !board[position])) return { error: 'That selection contains an empty cell.' };
+
+  const word = positions.map(position => board[position].toLowerCase()).join('');
+  const wordDefinitions = DICTIONARY.get(word);
+  if (!wordDefinitions) return { error: `"${word.toUpperCase()}" is not a valid word.` };
+
+  return {
+    word,
+    score: word.length === 5 ? 10 : word.length,
+    positions,
+    meanings: [{ partOfSpeech: 'definition', definitions: wordDefinitions.slice(0, 2) }]
+  };
 }
 
 function resolveTurnPlacements(roomId, room, turnId) {
@@ -934,9 +1097,15 @@ function startFinalTurnTimeout(roomId, room) {
 
 function scoreAllAndEnd(roomId, room) {
   activePlayers(room).forEach(p => {
-    const { words, total } = scoreBoard(p.board || Array(25).fill(''));
-    p.score = total;
-    p.words = words;
+    if (room.phase === 'manual_scoring') {
+      const words = p.words || [];
+      p.score = words.reduce((total, word) => total + word.score, 0);
+      p.words = words;
+    } else {
+      const { words, total } = scoreBoard(p.board || Array(25).fill(''));
+      p.score = total;
+      p.words = words.map(word => ({ ...word, manual: false }));
+    }
   });
 
   const leaderboard = activePlayers(room)

@@ -720,7 +720,12 @@
                     entry.words.forEach(w => {
                         const chip = document.createElement('button');
                         chip.className = 'word-chip';
-                        chip.innerHTML = `${w.word.toUpperCase()} <span style="opacity:0.7; font-size:0.7rem;">+${w.score}</span>`;
+                        if (w.manual === true) {
+                            chip.style.background = 'var(--gold)';
+                            chip.style.color = 'var(--bg-dark)';
+                        }
+                        const scoreLabel = w.manual === false ? `+${w.score} auto` : `+${w.score}`;
+                        chip.innerHTML = `${w.word.toUpperCase()} <span style="opacity:0.7; font-size:0.7rem;">${scoreLabel}</span>`;
 
                         const positions = Array.isArray(w.positions) ? w.positions : [];
                         const gridEl = card;
