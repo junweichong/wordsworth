@@ -1,0 +1,20 @@
+[
+  {
+    "version": "0.4.0",
+    "date": "2026-09-20",
+    "title": "Manual word scoring",
+    "changes": [
+      "Players can claim words during the final word hunt.",
+      "Added ready status and a configurable search timer."
+    ]
+  },
+  {
+    "version": "0.3.0",
+    "date": "2026-09-12",
+    "title": "Smoother multiplayer rooms",
+    "changes": [
+      "Added spectator mode for hosts.",
+      "Players can now be kicked from the lobby by the host."
+    ]
+  }
+]

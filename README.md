@@ -40,4 +40,6 @@ Create a **Web Service** in Render and connect it to the GitHub repository. Use 
 - Auto-Deploy: On Commit
 - Health Check Path: `/`
 
+In the Render service, open **Environment** and add the secret variable `ADMIN_PASSWORD` with the password you want to use. Do not commit `.env`; Render does not receive local `.env` files. After changing the value, save the environment variable and redeploy the service so the new value is loaded at startup. The service will fail to start in production if this variable is missing.
+
 Render builds the Docker image and starts the game with `npm start`. Future pushes to `main` trigger automatic redeployments.

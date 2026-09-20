@@ -52,6 +52,16 @@
       </div>
 
       <div id="landing-error" class="error-msg"></div>
+
+      <section class="changelog" aria-labelledby="changelog-title">
+        <div class="changelog-heading">
+          <h2 id="changelog-title">Latest updates</h2>
+          <span class="changelog-mark" aria-hidden="true">✦</span>
+        </div>
+        <div id="changelog-list" class="changelog-list" aria-live="polite">
+          <p class="changelog-status">Loading updates...</p>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -359,6 +369,45 @@
       el.textContent = msg;
       el.classList.add('visible');
       setTimeout(() => el.classList.remove('visible'), 4000);
+    }
+
+    async function loadChangelog() {
+      const list = document.getElementById('changelog-list');
+      try {
+        const response = await fetch('/api/changelog');
+        if (!response.ok) throw new Error('Could not load changelog');
+        const entries = await response.json();
+
+        list.innerHTML = '';
+        if (!Array.isArray(entries) || entries.length === 0) {
+          list.innerHTML = '<p class="changelog-status">No updates yet.</p>';
+          return;
+        }
+
+        entries.slice(0, 3).forEach(entry => {
+          const article = document.createElement('article');
+          article.className = 'changelog-entry';
+
+          const meta = document.createElement('div');
+          meta.className = 'changelog-meta';
+          meta.textContent = `${entry.version} / ${entry.date}`;
+
+          const title = document.createElement('h3');
+          title.textContent = entry.title;
+
+          const changes = document.createElement('ul');
+          (Array.isArray(entry.changes) ? entry.changes : []).forEach(change => {
+            const item = document.createElement('li');
+            item.textContent = change;
+            changes.appendChild(item);
+          });
+
+          article.append(meta, title, changes);
+          list.appendChild(article);
+        });
+      } catch (error) {
+        list.innerHTML = '<p class="changelog-status">Updates are unavailable right now.</p>';
+      }
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1527,6 +1576,8 @@
 
     // Close open player menus on outside click
     document.addEventListener('click', closeAllPlayerMenus);
+
+    loadChangelog();
   </script>
 </body>
 

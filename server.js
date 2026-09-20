@@ -6,6 +6,10 @@ const path = require('path');
 const fs = require('fs');
 const db = require('./database');
 
+const changelog = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'changelog.json'), 'utf8')
+);
+
 const app = express();
 app.use(express.json());
 const server = http.createServer(app);
@@ -17,8 +21,17 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/api/changelog', (req, res) => {
+  res.json(changelog);
+});
+
 // ── Admin Routes & Authorization ──────────────────────────────
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === 'production' ? null : 'admin123');
+
+if (!ADMIN_PASSWORD) {
+  console.error('ADMIN_PASSWORD must be set in production.');
+  process.exit(1);
+}
 
 function requireAdminAuth(req, res, next) {
   const authHeader = req.headers['authorization'];
