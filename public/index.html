@@ -105,7 +105,8 @@
         <input type="checkbox" id="spectator-host-cb"> Spectator mode (host does not play)
       </label>
       <label class="host-option" style="font-size:0.8rem;color:var(--ink);display:flex;align-items:center;gap:0.35rem;">
-        <input type="checkbox" id="auto-score-host-cb" onchange="toggleAutoScoreInput(this)"> Calculate scores automatically
+        <input type="checkbox" id="auto-score-host-cb" onchange="toggleAutoScoreInput(this)"> Calculate scores
+        automatically
       </label>
       <label style="font-size:0.8rem;color:var(--ink);display:flex;align-items:center;gap:0.25rem;">
         <span>End game search (seconds):</span>
@@ -205,12 +206,15 @@
       <main class="manual-board-panel">
         <div class="manual-selection-bar" aria-live="polite">
           <span id="manual-selection-word">Tap a letter to begin</span>
-          <button class="btn btn-secondary manual-clear-btn" type="button" onclick="clearManualSelection()">Clear</button>
+          <button class="btn btn-secondary manual-clear-btn" type="button"
+            onclick="clearManualSelection()">Clear</button>
         </div>
         <div class="manual-board" id="manual-board" aria-label="Your final word board"></div>
         <div class="manual-actions">
-          <button class="btn btn-forest" id="manual-confirm-btn" type="button" onclick="confirmManualWord()" disabled>Confirm word</button>
-          <button class="btn btn-secondary manual-ready-btn" id="manual-ready-btn" type="button" onclick="toggleManualReady()">I'm ready</button>
+          <button class="btn btn-forest" id="manual-confirm-btn" type="button" onclick="confirmManualWord()"
+            disabled>Confirm word</button>
+          <button class="btn btn-secondary manual-ready-btn" id="manual-ready-btn" type="button"
+            onclick="toggleManualReady()">I'm ready</button>
           <p id="manual-ready-status" class="manual-ready-status" aria-live="polite"></p>
           <p id="manual-feedback" class="manual-feedback" aria-live="polite"></p>
         </div>
@@ -311,8 +315,8 @@
       placementStatus: [],
       grid: Array(25).fill(''),   // player's own 5x5 board
       selectedCell: null,
-        placedThisTurn: false,
-        manualReady: false,
+      placedThisTurn: false,
+      manualReady: false,
       finalTurnActive: false,
     };
 
@@ -832,17 +836,15 @@
       const secondColumn = second % 5;
       const path = [];
 
-      if (firstRow === secondRow) {
-        const step = secondColumn >= firstColumn ? 1 : -1;
-        for (let column = firstColumn; ; column += step) {
+      // Only allow left-to-right (same row, second column is to the right)
+      if (firstRow === secondRow && secondColumn > firstColumn) {
+        for (let column = firstColumn; column <= secondColumn; column++) {
           path.push(firstRow * 5 + column);
-          if (column === secondColumn) break;
         }
-      } else if (firstColumn === secondColumn) {
-        const step = secondRow >= firstRow ? 1 : -1;
-        for (let row = firstRow; ; row += step) {
+        // Only allow top-to-bottom (same column, second row is below)
+      } else if (firstColumn === secondColumn && secondRow > firstRow) {
+        for (let row = firstRow; row <= secondRow; row++) {
           path.push(row * 5 + firstColumn);
-          if (row === secondRow) break;
         }
       }
 
@@ -852,15 +854,15 @@
     function selectManualCell(index) {
       if (state.phase !== 'manual_scoring' || state.manualReady) return;
       if (!state.grid[index]) return;
+
+      // Clicking the last selected cell deselects it (trim from end only)
       if (state.manualSelected.includes(index)) {
-        if (state.manualSelected.length === 1) {
-          state.manualSelected = [];
-        } else if (index === state.manualSelected[0]) {
-          state.manualSelected = state.manualSelected.slice(1);
-        } else if (index === state.manualSelected[state.manualSelected.length - 1]) {
+        if (index === state.manualSelected[state.manualSelected.length - 1]) {
           state.manualSelected = state.manualSelected.slice(0, -1);
+        } else if (state.manualSelected.length === 1 && index === state.manualSelected[0]) {
+          state.manualSelected = [];
         } else {
-          toast('You cannot remove a letter from the middle of a word.');
+          toast('You can only deselect the last letter in your selection.');
         }
         renderManualBoard();
         updateManualSelectionBar();
@@ -868,23 +870,34 @@
       }
 
       if (state.manualSelected.length === 0) {
+        // First letter — start a new selection
         state.manualSelected = [index];
       } else if (state.manualSelected.length === 1) {
+        // Second letter — must be to the right or directly below the first
         const path = getManualPath(state.manualSelected[0], index);
-        state.manualSelected = path.length ? path : [index];
-      } else if (index === state.manualSelected[state.manualSelected.length - 1]) {
-        state.manualSelected.pop();
+        if (path.length >= 2) {
+          state.manualSelected = path;
+        } else {
+          toast('Select a letter to the right or below the first.');
+          state.manualSelected = [index];
+        }
       } else {
-        const first = state.manualSelected[0];
+        // Subsequent letters — must continue in the established direction
         const last = state.manualSelected[state.manualSelected.length - 1];
-        const pathFromFirst = getManualPath(first, index);
         const pathFromLast = getManualPath(last, index);
         if (pathFromLast.length === 2) {
-          state.manualSelected = state.manualSelected.concat(index);
-        } else if (pathFromFirst.length === 2) {
-          state.manualSelected = [index].concat(state.manualSelected);
+          // Check that it continues in the same direction
+          const first = state.manualSelected[0];
+          const second = state.manualSelected[1];
+          const dirHorizontal = Math.floor(first / 5) === Math.floor(second / 5);
+          const newDirHorizontal = Math.floor(last / 5) === Math.floor(index / 5);
+          if (dirHorizontal === newDirHorizontal) {
+            state.manualSelected = state.manualSelected.concat(index);
+          } else {
+            toast('Continue in the same direction (right or down).');
+          }
         } else {
-          state.manualSelected = [index];
+          toast('You can only extend the word one step to the right or downward.');
         }
       }
 
@@ -1168,8 +1181,8 @@
         manualClaims: [],
         manualScore: 0,
         manualDeadline: null,
-          manualProgress: [],
-          manualReady: false,
+        manualProgress: [],
+        manualReady: false,
       };
       showScreen('landing');
     }
